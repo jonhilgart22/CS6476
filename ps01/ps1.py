@@ -9,25 +9,32 @@ import sys
 def extractRed(image):
     """ Returns the red channel of the input image.
     """
-    pass
+    # We can also use split e.g. cv2.split(image)[2]
+    return image[:, :, 2]
 
 
 def extractGreen(image):
     """ Returns the green channel of the input image.
     """
-    pass
+    # We can also use split e.g. cv2.split(image)[1]
+    return image[:, :, 1]
 
 
 def extractBlue(image):
     """ Returns the blue channel of the input image.
     """
-    pass   
+    # We can also use split e.g. cv2.split(image)[0]
+    return image[:, :, 0]
 
 
 def swapGreenBlue(image):
     """ Returns an image with the green and blue channels of the input image swapped.
     """
-    pass
+    output = np.zeros(image.shape, dtype=image.dtype)
+    output[:, :, :] = image  # deep copy
+    output[:, :, 0] = extractGreen(image)
+    output[:, :, 1] = extractBlue(image)
+    return output
 
 
 def copyPasteMiddle(src, dst, shape):
@@ -41,13 +48,30 @@ def copyPasteMiddle(src, dst, shape):
         into an dst image of size (3,3), the function copies the range [0:1,0:1] of 
         the src into the range [1:2,1:2] of the dst.
     """
-    pass
+    if len(src.shape) != 2 or len(dst.shape) != 2 or len(shape) != 2:
+        return dst
+
+    sx, sy = math.floor((src.shape[0] - shape[0]) / 2), math.floor((src.shape[1] - shape[1]) / 2)
+    dx, dy = math.floor((dst.shape[0] - shape[0]) / 2), math.floor((dst.shape[1] - shape[1]) / 2)
+    sx_end, sy_end = sx + shape[0], sy + shape[1]
+    dx_end, dy_end = dx + shape[0], dy + shape[1]
+
+    output = np.zeros(dst.shape, dtype=dst.dtype)
+    output[:, :] = dst  # deep copy
+    # copy center of src with size shape to dst
+    output[dx:dx_end, dy:dy_end] = src[sx:sx_end, sy:sy_end]
+
+    return output
 
 
 def imageStats(image):
     """ Returns the tuple (min,max,mean,stddev) of statistics for the input monochrome image.
     """
-    pass
+    image_min = np.min(image)
+    image_max = np.max(image)
+    image_mean = np.mean(image)
+    image_stddev = np.std(image)
+    return image_min, image_max, image_mean, image_stddev
 
 
 def normalized(image, stddev):
@@ -58,7 +82,9 @@ def normalized(image, stddev):
     of out-of-range pixel values.  Consider converting the input image to 
     a float64 type before passing in an image.
     """
-    pass
+    image_min, image_max, image_mean, image_stddev = imageStats(image)
+    output = (((image - image_mean) / image_stddev) * stddev) + image_mean
+    return output.astype(np.uint8)
 
 
 def shiftImageLeft(image, shift):
@@ -71,13 +97,18 @@ def shiftImageLeft(image, shift):
 
         for further explanation.
     """
-    pass
+    # move image to the left by "shift" amount and replicate to fill the missing column
+    return cv2.copyMakeBorder(image[:, shift:], 0, 0, 0, shift, cv2.BORDER_REPLICATE)
 
 
 def differenceImage(img1, img2):
     """Returns the normalized value of the difference between the two input images.
     """
-    pass
+    output = img1.astype(np.float) - img2.astype(np.float)
+    image_min, image_max, image_mean, image_stddev = imageStats(output)
+    # normalize the difference to 0-255
+    output = (output + np.abs(image_min)) * ((2 ** 8 - 1) / (np.abs(image_max) + np.abs(image_min)))
+    return output.astype(np.uint8)
 
 
 def addNoise(image, channel, sigma):
@@ -88,4 +119,8 @@ def addNoise(image, channel, sigma):
     of out-of-range pixel values.  Consider converting the input image to 
     a float64 type before passing in an image.
     """
-    pass
+    noise = np.random.randn(*image.shape) * sigma
+    output = np.zeros(image.shape, dtype=image.dtype)
+    output[:, :, :] = image
+    output[:, :, channel] += noise[:, :, channel]
+    return output

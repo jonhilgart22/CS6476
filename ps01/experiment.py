@@ -7,8 +7,8 @@ from ps1 import *
 def main():
 
     # Insert you image file names here
-    img1_filename = None
-    img2_filename = None
+    img1_filename = 'input/ps1-1-a-1.png'
+    img2_filename = 'input/ps1-1-a-2.png'
 
     # # 1a
     img1 = cv2.imread(img1_filename)
@@ -45,12 +45,12 @@ def main():
     # # 3a
 
     # Choose the monochrome image for img1
-    mono1 = None
+    mono1 = img1_green
 
     mono2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
     replaced_img = copyPasteMiddle(mono1, mono2, (100, 100))
-          
+
     cv2.imwrite('output/ps1-3-a-1.png', replaced_img)
 
     # # 4 Arithmetic and Geometric operations
@@ -78,7 +78,7 @@ def main():
     # # 5 Noise
 
     # Choose a sigma value
-    sigma = None
+    sigma = 20
 
     # # 5a
     channel = 1
