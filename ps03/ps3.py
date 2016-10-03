@@ -21,9 +21,25 @@ def disparity_ssd(L, R, direction, w_size, dmax):
         disp_img (numpy.array): Disparity map of dtype = float, same size as L or R.
                                 Return it without normalizing or clipping it.
     """
+    y, x = L.shape
+    disparity_map = np.zeros((y, x, dmax))
+    kernel = np.ones((w_size, w_size)) / (w_size * w_size)
 
-    # TODO: Your code here
-    pass  # TODO: Change to return disp_img
+    for d in xrange(0, dmax):
+        if d == 0:
+            rshift = R
+        else:
+            if direction == 0:
+                rshift = cv2.copyMakeBorder(R[:, d:], 0, 0, 0, d, cv2.BORDER_REPLICATE)  # shift to left
+            else:
+                rshift = cv2.copyMakeBorder(R[:, :-d], 0, 0, d, 0, cv2.BORDER_REPLICATE)  # shift to right
+        # https://software.intel.com/en-us/node/504333
+        disparity_map[:, :, d] = cv2.filter2D((L - rshift) ** 2, -1, kernel)
+
+    # get the minimum squared error
+    disp_img = np.argmin(disparity_map, axis=2)
+
+    return disp_img
 
 
 def disparity_ncorr(L, R, direction, w_size, dmax):
@@ -45,9 +61,27 @@ def disparity_ncorr(L, R, direction, w_size, dmax):
         disp_img (numpy.array): Disparity map of dtype = float, same size as L or R.
                                 Return it without normalizing or clipping it.
     """
+    y, x = L.shape
+    disparity_map = np.zeros((y, x, dmax))
+    kernel = np.ones((w_size, w_size)) / (w_size * w_size)
 
-    # TODO: Your code here
-    pass  # TODO: Change to return disp_img
+    for d in xrange(0, dmax):
+        if d == 0:
+            rshift = R
+        else:
+            if direction == 0:
+                rshift = cv2.copyMakeBorder(R[:, d:], 0, 0, 0, d, cv2.BORDER_REPLICATE)  # shift to left
+            else:
+                rshift = cv2.copyMakeBorder(R[:, :-d], 0, 0, d, 0, cv2.BORDER_REPLICATE)  # shift to right
+        # https://software.intel.com/en-us/node/504333
+        r_tx = cv2.filter2D(L * rshift, -1, kernel)
+        r_xx = cv2.filter2D(rshift * rshift, -1, kernel)
+        r_tt = cv2.filter2D(L * L, -1, kernel)
+        disparity_map[:, :, d] = r_tx / np.sqrt(r_xx * r_tt)
+
+    disp_img = np.argmax(disparity_map, axis=2)
+
+    return disp_img
 
 
 def add_noise(image, sigma):
@@ -65,9 +99,9 @@ def add_noise(image, sigma):
         noisy (numpy.array): Raw output image with added noise of dtype = float.
                              Return it without normalizing or clipping it.
     """
-
-    # TODO: Your code here
-    pass  # TODO: Change to return noisy
+    noise = np.random.randn(*image.shape) * sigma
+    output = image.astype(np.float) + noise
+    return output
 
 
 def increase_contrast(image, percent):
@@ -85,6 +119,4 @@ def increase_contrast(image, percent):
         img_out (numpy.array): Raw output image of dtype = float.
                                Return it without normalizing or clipping it.
     """
-
-    # TODO: Your code here
-    pass  # TODO: Change to return img_out
+    return image * (1 + (percent / 100.))
