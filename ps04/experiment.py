@@ -105,7 +105,15 @@ def main():
     print '\n Error Best M k = 16: \n', error_16
     print '\n Average Residuals k = 16: \n', avg_residuals_16
 
-    best_M = None  # Todo: Pick the best M from k = 8, 12, or 16
+    # Todo: Pick the best M from k = 8, 12, or 16
+    if avg_residuals_8 <= avg_residuals_12:
+        best_M = best_M_8
+        best_avg_residuals = avg_residuals_8
+    else:
+        best_M = best_M_12
+        best_avg_residuals = avg_residuals_12
+    if best_avg_residuals > avg_residuals_16:
+        best_M = best_M_16
 
     camera_center = get_camera_center(best_M)   # TODO: implement this
     print '\n Camera center: \n', camera_center
@@ -146,7 +154,7 @@ def main():
     print '\n T_b matrix: \n', T_b
     print '\n Fundamental Matrix F: \n', F_hat
 
-    new_F = None  # TODO: insert the code for the matrix multiplication of transpose(T_b), F, T_a)
+    new_F = np.dot(T_b.T, np.dot(F_hat, T_a))  # TODO: insert the code for the matrix multiplication of transpose(T_b), F, T_a)
     print '\n New Fundamental Matrix F: \n', new_F
 
     lines_img_a, lines_img_b = get_epipolar_lines(img_a.shape, img_b.shape, new_F, pts2d_pic_a, pts2d_pic_b)
