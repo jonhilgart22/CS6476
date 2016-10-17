@@ -67,6 +67,51 @@ def main():
     answers for your report.
     """
 
+    # 2. AVERAGE FOR BEST_M
+    # NOTE: These points are not normalized
+    pts3d = read_points(os.path.join(input_dir, SCENE))
+    pts2d_pic_b = read_points(os.path.join(input_dir, PIC_B_2D))
+
+    best_M_8, error_8, avg_residuals_8 = 0, 0, 0
+    best_M_12, error_12, avg_residuals_12 = 0, 0, 0
+    best_M_16, error_16, avg_residuals_16 = 0, 0, 0
+    num = 100
+    for i in xrange(num):
+        _best_M_8, _error_8, _avg_residuals_8 = calibrate_camera(pts3d, pts2d_pic_b, 8)  # TODO: implement this
+        _best_M_12, _error_12, _avg_residuals_12 = calibrate_camera(pts3d, pts2d_pic_b, 12)  # TODO: implement this
+        _best_M_16, _error_16, _avg_residuals_16 = calibrate_camera(pts3d, pts2d_pic_b, 16)  # TODO: implement this
+        best_M_8 += _best_M_8
+        best_M_12 += _best_M_12
+        best_M_16 += _best_M_16
+        error_8 += _error_8
+        error_12 += _error_12
+        error_16 += _error_16
+        avg_residuals_8 += _avg_residuals_8
+        avg_residuals_12 += _avg_residuals_12
+        avg_residuals_16 += _avg_residuals_16
+
+    best_M_8 /= num
+    best_M_12 /= num
+    best_M_16 /= num
+    error_8 /= num
+    error_12 /= num
+    error_16 /= num
+    avg_residuals_8 /= num
+    avg_residuals_12 /= num
+    avg_residuals_16 /= num
+
+    print '\n Best M k = 8: \n', best_M_8
+    print '\n Error Best M k = 8: \n', error_8
+    print ' Average Residuals k = 8: \n', avg_residuals_8
+
+    print '\n Best M k = 12: \n', best_M_12
+    print '\n Error Best M k = 12: \n', error_12
+    print ' Average Residuals k = 12: \n', avg_residuals_12
+
+    print '\n Best M k = 16: \n', best_M_16
+    print '\n Error Best M k = 16: \n', error_16
+    print ' Average Residuals k = 16: \n', avg_residuals_16
+
     # 1
     # Read points
     pts3d_norm = read_points(os.path.join(input_dir, SCENE_NORM))
