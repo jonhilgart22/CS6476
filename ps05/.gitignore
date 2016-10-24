@@ -1,0 +1,9 @@
+.idea/
+*~
+*.pyc
+.bonnie
+.DS_Store
+student.zip
+output/
+ps05*result*.json
+bonnie/
