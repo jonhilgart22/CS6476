@@ -369,8 +369,6 @@ def compute_translation_RANSAC(kp1, kp2, matches, thresh=0):
 
         sample_count += 1
 
-    print len(good_matches) / float(len(matches))
-
     return translation, good_matches
 
 
@@ -389,17 +387,6 @@ def compute_similarity_RANSAC(kp1, kp2, matches, thresh=0):
         transform (numpy.array): similarity transform matrix, NumPy array of shape (2, 3)
         good_matches (list): consensus set of matches that agree with this transform
     """
-    transform = np.zeros((2, 3))
-    good_matches = []
-    s = 2
-
-    if len(matches) < s:
-        return transform, good_matches
-
-    N = np.inf
-    sample_count = 0
-    e = 1.
-    p = .99
 
     def calculate_transform(kp1, kp2, samples):
         A = np.zeros((0, 4))
@@ -416,36 +403,22 @@ def compute_similarity_RANSAC(kp1, kp2, matches, thresh=0):
                               [b,  a, d]]).reshape(2, 3)
         return transform
 
-    while N > sample_count:
-        samples = np.random.choice(matches, s, replace=False)
-        _transform = calculate_transform(kp1, kp2, samples)
-
+    def find_inliers(kp1, kp2, matches, thresh, transform):
         inliers = []
         for match in matches:
             p1 = np.array(kp1[match.queryIdx].pt)
             p2 = np.array(kp2[match.trainIdx].pt)
             h_p1 = np.concatenate((p1, [1])).reshape(3, 1)
-            ep = np.dot(_transform, h_p1)
+            ep = np.dot(transform, h_p1)
 
             # difference between p2 and ep
             ssd = calculate_ssd(p2, ep.reshape(ep.shape[0],))
             if ssd <= thresh:
                 inliers.append(match)
+        return inliers
 
-        if len(good_matches) < len(inliers) or len(good_matches) == 0:
-            good_matches = inliers
-
-        e0 = 1 - (len(inliers) / float(len(matches)))
-
-        if e0 < e:
-            e = e0
-            N = np.log(1 - p) / np.log(1 - np.power(1 - e, s))
-
-        sample_count += 1
-
-    transform = calculate_transform(kp1, kp2, good_matches)
-
-    print len(good_matches) / float(len(matches))
+    transform, good_matches = compute_generic_transform(calculate_transform, find_inliers, (2, 3), 2, kp1, kp2, matches,
+                                                        thresh)
 
     return transform, good_matches
 
@@ -465,17 +438,6 @@ def compute_affine_RANSAC(kp1, kp2, matches, thresh=0):
         transform (numpy.array): affine transform matrix, NumPy array of shape (2, 3)
         good_matches (list): consensus set of matches that agree with this transform
     """
-    transform = np.zeros((2, 3))
-    good_matches = []
-    s = 3
-
-    if len(matches) < s:
-        return transform, good_matches
-
-    N = np.inf
-    sample_count = 0
-    e = 1.
-    p = .99
 
     def calculate_transform(kp1, kp2, samples):
         A = np.zeros((0, 6))
@@ -492,21 +454,57 @@ def compute_affine_RANSAC(kp1, kp2, matches, thresh=0):
                               [d, e, f]]).reshape(2, 3)
         return transform
 
-    while N > sample_count:
-        samples = np.random.choice(matches, s, replace=False)
-        _transform = calculate_transform(kp1, kp2, samples)
-
+    def find_inliers(kp1, kp2, matches, thresh, transform):
         inliers = []
         for match in matches:
             p1 = np.array(kp1[match.queryIdx].pt)
             p2 = np.array(kp2[match.trainIdx].pt)
             h_p1 = np.concatenate((p1, [1])).reshape(3, 1)
-            ep = np.dot(_transform, h_p1)
+            ep = np.dot(transform, h_p1)
 
             # difference between p2 and ep
-            ssd = calculate_ssd(p2, ep.reshape(ep.shape[0],))
+            ssd = calculate_ssd(p2, ep.reshape(ep.shape[0], ))
             if ssd <= thresh:
                 inliers.append(match)
+        return inliers
+
+    transform, good_matches = compute_generic_transform(calculate_transform, find_inliers, (2, 3), 3, kp1, kp2, matches,
+                                                        thresh)
+
+    return transform, good_matches
+
+
+def compute_generic_transform(calculate_transform, find_inliers, transform_shape, num_points, kp1, kp2, matches, thresh=0):
+    """
+
+    :param calculate_transform: method to calculate transformation
+    :param find_inliers: method to find inliers
+    :param transform_shape: tuple of transform shape e.g. (2, 3)
+    :param num_points: number of random sample to be selected
+    :param kp1: list of keypoints (cv2.KeyPoint objects) found in image1
+    :param kp2: list of keypoints (cv2.KeyPoint objects) found in image2
+    :param matches: list of matches (as cv2.DMatch objects)
+    :param thresh: offset tolerance in pixels
+    :return:
+        transform (numpy.array): affine transform matrix, NumPy array of shape (2, 3)
+        good_matches (list): consensus set of matches that agree with this transform
+    """
+    transform = np.zeros(transform_shape)
+    good_matches = []
+    s = num_points
+
+    if len(matches) < s:
+        return transform, good_matches
+
+    N = np.inf
+    sample_count = 0
+    e = 1.
+    p = .99
+
+    while N > sample_count:
+        samples = np.random.choice(matches, s, replace=False)
+        _transform = calculate_transform(kp1, kp2, samples)
+        inliers = find_inliers(kp1, kp2, matches, thresh, _transform)
 
         if len(good_matches) < len(inliers) or len(good_matches) == 0:
             good_matches = inliers
@@ -520,8 +518,6 @@ def compute_affine_RANSAC(kp1, kp2, matches, thresh=0):
         sample_count += 1
 
     transform = calculate_transform(kp1, kp2, good_matches)
-
-    print len(good_matches) / float(len(matches))
 
     return transform, good_matches
 
