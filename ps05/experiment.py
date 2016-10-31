@@ -27,44 +27,6 @@ def main():
     answers for your report.
     """
 
-    # check = cv2.imread(os.path.join(input_dir, 'test_out1.png'), 0) / 255.
-    # check_x = gradient_x(check)
-    # check_y = gradient_y(check)
-    # check_pair = make_image_pair(check_x, check_y)
-    # check_pair = cv2.normalize(check_pair, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    # cv2.imwrite(os.path.join(output_dir, "check_pair.png"), check_pair)
-    #
-    # kernel_dims = (3, 3)
-    # alpha = 0.06
-    # check_r = harris_response(check_x, check_y, kernel_dims, alpha)
-    # check_r = cv2.normalize(check_r, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    # cv2.imwrite(os.path.join(output_dir, "check_r.png"), check_r)
-    #
-    # threshold = 0.6
-    # radius = 3
-    # check_corners = find_corners(check_r, threshold, radius)
-    # check_out = draw_corners(check, check_corners)
-    # check_out = cv2.normalize(check_out, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    # cv2.imwrite(os.path.join(output_dir, "check_out.png"), check_out)
-    #
-    # check_rot = cv2.imread(os.path.join(input_dir, 'test_out2.png'), 0) / 255.
-    # check_rot_x = gradient_x(check_rot)
-    # check_rot_y = gradient_y(check_rot)
-    # check_rot_pair = make_image_pair(check_rot_x, check_rot_y)
-    # check_rot_pair = cv2.normalize(check_rot_pair, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    # cv2.imwrite(os.path.join(output_dir, "check_rot_pair.png"), check_rot_pair)
-    #
-    # check_rot_r = harris_response(check_rot_x, check_rot_y, kernel_dims, alpha)
-    # check_rot_r = cv2.normalize(check_rot_r, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    # cv2.imwrite(os.path.join(output_dir, "check_rot_r.png"), check_rot_r)
-    #
-    # check_rot_corners = find_corners(check_rot_r, threshold, radius)
-    # check_rot_out = draw_corners(check_rot, check_rot_corners)
-    # check_rot_out = cv2.normalize(check_rot_out, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-    # cv2.imwrite(os.path.join(output_dir, "check_rot_out.png"), check_rot_out)
-
-
-
     # 1a
     trans_a = cv2.imread(os.path.join(input_dir, "transA.jpg"), 0) / 255.
     trans_a_x = gradient_x(trans_a)  # TODO: implement this

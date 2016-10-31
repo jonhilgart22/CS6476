@@ -157,6 +157,7 @@ def main():
     else:
         best_M = best_M_12
         best_avg_residuals = avg_residuals_12
+
     if best_avg_residuals > avg_residuals_16:
         best_M = best_M_16
 
