@@ -1,0 +1,8 @@
+output/*.png
+.idea
+*~
+*.pyc
+.bonnie
+.DS_Store
+student.zip
+ps07*result*.json
