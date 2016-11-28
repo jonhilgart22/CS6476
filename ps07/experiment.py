@@ -206,33 +206,37 @@ def main():
     #     num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn,
     #     template_coords=template_rect)  # Add more if you need to
 
-    # 2a
-    # You may define new values for num_particles, sigma_mse, and sigma_dyn
-    num_particles = 1000  # Define the number of particles
-    sigma_mse = 10  # Define a value for sigma when calculating the MSE
-    sigma_dyn = 10  # Define a value for sigma when adding noise to the particles movement
-    alpha = .37  # Define a value for alpha
-    # TODO: Implement AppearanceModelPF (derived from ParticleFilter)
-    # TODO: Run it on pres_debate.mp4 to track Romney's left hand, tweak parameters to track up to frame 140
-    # template_rect = {'x': 520, 'y': 375, 'w': 85, 'h': 130}  # TODO: Define the hand coordinate values
-    # template_rect = {'x': 545, 'y': 385, 'w': 60, 'h': 95}  # TODO: Define the hand coordinate values
-    template_rect = {'x': 545, 'y': 390, 'w': 60, 'h': 90}  # TODO: Define the hand coordinate values
-    run_particle_filter(AppearanceModelPF,  # particle filter model class
-        os.path.join(input_dir, "pres_debate.mp4"),  # input video
-        template_rect,
-        {
-            'template': os.path.join(output_dir, 'ps7-2-a-1.png'),
-            15: os.path.join(output_dir, 'ps7-2-a-2.png'),
-            50: os.path.join(output_dir, 'ps7-2-a-3.png'),
-            140: os.path.join(output_dir, 'ps7-2-a-4.png')
-        },  # frames to save, mapped to filenames, and 'template'
-        num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn, alpha=alpha,
-        template_coords=template_rect)  # Add more if you need to
+    # # 2a
+    # # You may define new values for num_particles, sigma_mse, and sigma_dyn
+    # num_particles = 3000  # Define the number of particles
+    # sigma_mse = 6  # Define a value for sigma when calculating the MSE
+    # sigma_dyn = 30  # Define a value for sigma when adding noise to the particles movement
+    # alpha = .37  # Define a value for alpha
+    # # TODO: Implement AppearanceModelPF (derived from ParticleFilter)
+    # # TODO: Run it on pres_debate.mp4 to track Romney's left hand, tweak parameters to track up to frame 140
+    # # template_rect = {'x': 520, 'y': 375, 'w': 85, 'h': 130}  # TODO: Define the hand coordinate values
+    # # template_rect = {'x': 545, 'y': 385, 'w': 60, 'h': 95}  # TODO: Define the hand coordinate values
+    # template_rect = {'x': 545, 'y': 390, 'w': 60, 'h': 90}  # TODO: Define the hand coordinate values
+    # run_particle_filter(AppearanceModelPF,  # particle filter model class
+    #     os.path.join(input_dir, "pres_debate.mp4"),  # input video
+    #     template_rect,
+    #     {
+    #         'template': os.path.join(output_dir, 'ps7-2-a-1.png'),
+    #         15: os.path.join(output_dir, 'ps7-2-a-2.png'),
+    #         50: os.path.join(output_dir, 'ps7-2-a-3.png'),
+    #         140: os.path.join(output_dir, 'ps7-2-a-4.png')
+    #     },  # frames to save, mapped to filenames, and 'template'
+    #     num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn, alpha=alpha,
+    #     template_coords=template_rect)  # Add more if you need to
 
     # # 2b
     # # You may define new values for num_particles, sigma_mse, sigma_dyn, and alpha
+    # num_particles = 4000  # Define the number of particles
+    # sigma_mse = 6  # Define a value for sigma when calculating the MSE
+    # sigma_dyn = 30  # Define a value for sigma when adding noise to the particles movement
+    # alpha = .37  # Define a value for alpha
     # # TODO: Run AppearanceModelPF on noisy_debate.mp4, tweak parameters to track hand up to frame 140
-    # template_rect = {'x': None, 'y': None, 'w': None, 'h': None}  # Define the template window values
+    # template_rect = {'x': 545, 'y': 390, 'w': 60, 'h': 90}  # Define the template window values
     # run_particle_filter(AppearanceModelPF,  # particle filter model class
     #     os.path.join(input_dir, "noisy_debate.mp4"),  # input video
     #     template_rect,
@@ -244,26 +248,29 @@ def main():
     #     },  # frames to save, mapped to filenames, and 'template'
     #     num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn, alpha=alpha,
     #     template_coords=template_rect)  # Add more if you need to
-    #
-    # # 3: Use color histogram distance instead of MSE (you can implement a derived class similar to AppearanceModelPF)
-    #
-    # # 3a
-    # # You may define new values for num_particles, sigma_mse, and sigma_dyn
-    # hist_bins_num = 8
-    # template_rect = {'x': 320.8751, 'y': 175.1776, 'w': 103.5404, 'h': 129.0504}
-    # run_particle_filter(MeanShiftLitePF,
-    #     os.path.join(input_dir, "pres_debate.mp4"),
-    #     template_rect,
-    #     {
-    #         'template': os.path.join(output_dir, 'ps7-3-a-1.png'),
-    #         28: os.path.join(output_dir, 'ps7-3-a-2.png'),
-    #         94: os.path.join(output_dir, 'ps7-3-a-3.png'),
-    #         171: os.path.join(output_dir, 'ps7-3-a-4.png')
-    #     },
-    #     num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn,
-    #     hist_bins_num=hist_bins_num,
-    #     template_coords=template_rect)  # Add more if you need to
-    #
+
+    # 3: Use color histogram distance instead of MSE (you can implement a derived class similar to AppearanceModelPF)
+
+    # 3a
+    # You may define new values for num_particles, sigma_mse, and sigma_dyn
+    num_particles = 300  # Define the number of particles
+    sigma_mse = 10  # Define a value for sigma when calculating the MSE
+    sigma_dyn = 10  # Define a value for sigma when adding noise to the particles movement
+    hist_bins_num = 8
+    template_rect = {'x': 320.8751, 'y': 175.1776, 'w': 103.5404, 'h': 129.0504}
+    run_particle_filter(MeanShiftLitePF,
+        os.path.join(input_dir, "pres_debate.mp4"),
+        template_rect,
+        {
+            'template': os.path.join(output_dir, 'ps7-3-a-1.png'),
+            28: os.path.join(output_dir, 'ps7-3-a-2.png'),
+            94: os.path.join(output_dir, 'ps7-3-a-3.png'),
+            171: os.path.join(output_dir, 'ps7-3-a-4.png')
+        },
+        num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn,
+        hist_bins_num=hist_bins_num,
+        template_coords=template_rect)  # Add more if you need to
+
     # # 3b
     # # You may define new values for num_particles, sigma_mse, sigma_dyn, and hist_bins_num
     # template_rect = {'x': None, 'y': None, 'w': None, 'h': None}  # Define the template window values

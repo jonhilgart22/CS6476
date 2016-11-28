@@ -252,6 +252,7 @@ class AppearanceModelPF(ParticleFilter):
             mse = self._calculate_mse(self.template, image)
             p_zx = self._calculate_similarity(mse)
 
+            # get the best image with higher similarity
             if p_zx > high_similarity:
                 best = image
                 high_similarity = p_zx
@@ -265,9 +266,8 @@ class AppearanceModelPF(ParticleFilter):
             # TODO: should we mod by shape?
             self.particles[i] = self.particles[i] + self._get_noise()
 
+        # update the template
         self.template = self.alpha * best + (1 - self.alpha) * self.template
-        cv2.imwrite(os.path.join(output_dir, 'images/template{0}.png'.format(self.count)), self.template)
-        self.count += 1
 
         if normalization > 0:
             self.weights /= normalization
