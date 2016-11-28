@@ -72,4 +72,8 @@ Vagrant.configure("2") do |config|
   #   apt-get update
   #   apt-get install -y apache2
   # SHELL
+
+  # forward display to host
+  config.ssh.forward_agent = true
+  config.ssh.forward_x11 = true
 end
