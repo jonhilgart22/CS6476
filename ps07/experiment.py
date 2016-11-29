@@ -251,29 +251,33 @@ def main():
 
     # 3: Use color histogram distance instead of MSE (you can implement a derived class similar to AppearanceModelPF)
 
-    # 3a
-    # You may define new values for num_particles, sigma_mse, and sigma_dyn
-    num_particles = 300  # Define the number of particles
-    sigma_mse = 10  # Define a value for sigma when calculating the MSE
-    sigma_dyn = 10  # Define a value for sigma when adding noise to the particles movement
-    hist_bins_num = 8
-    template_rect = {'x': 320.8751, 'y': 175.1776, 'w': 103.5404, 'h': 129.0504}
-    run_particle_filter(MeanShiftLitePF,
-        os.path.join(input_dir, "pres_debate.mp4"),
-        template_rect,
-        {
-            'template': os.path.join(output_dir, 'ps7-3-a-1.png'),
-            28: os.path.join(output_dir, 'ps7-3-a-2.png'),
-            94: os.path.join(output_dir, 'ps7-3-a-3.png'),
-            171: os.path.join(output_dir, 'ps7-3-a-4.png')
-        },
-        num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn,
-        hist_bins_num=hist_bins_num,
-        template_coords=template_rect)  # Add more if you need to
+    # # 3a
+    # # You may define new values for num_particles, sigma_mse, and sigma_dyn
+    # num_particles = 500  # Define the number of particles
+    # sigma_mse = .5  # Define a value for sigma when calculating the MSE
+    # sigma_dyn = 8  # Define a value for sigma when adding noise to the particles movement
+    # hist_bins_num = 8
+    # template_rect = {'x': 320.8751, 'y': 175.1776, 'w': 103.5404, 'h': 129.0504}
+    # run_particle_filter(MeanShiftLitePF,
+    #     os.path.join(input_dir, "pres_debate.mp4"),
+    #     template_rect,
+    #     {
+    #         'template': os.path.join(output_dir, 'ps7-3-a-1.png'),
+    #         28: os.path.join(output_dir, 'ps7-3-a-2.png'),
+    #         94: os.path.join(output_dir, 'ps7-3-a-3.png'),
+    #         171: os.path.join(output_dir, 'ps7-3-a-4.png')
+    #     },
+    #     num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn,
+    #     hist_bins_num=hist_bins_num,
+    #     template_coords=template_rect)  # Add more if you need to
 
     # # 3b
     # # You may define new values for num_particles, sigma_mse, sigma_dyn, and hist_bins_num
-    # template_rect = {'x': None, 'y': None, 'w': None, 'h': None}  # Define the template window values
+    # num_particles = 400  # Define the number of particles
+    # sigma_mse = .5  # Define a value for sigma when calculating the MSE
+    # sigma_dyn = 8  # Define a value for sigma when adding noise to the particles movement
+    # hist_bins_num = 16
+    # template_rect = {'x': 540, 'y': 390, 'w': 60, 'h': 100}  # Define the template window values
     # run_particle_filter(MeanShiftLitePF,
     #     os.path.join(input_dir, "pres_debate.mp4"),
     #     template_rect,
@@ -286,22 +290,22 @@ def main():
     #     num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn,
     #     hist_bins_num=hist_bins_num,
     #     template_coords=template_rect)  # Add more if you need to
-    #
-    # # 4: Discussion problems. See problem set document.
-    #
-    # # 5: Implement a more sophisticated model to deal with occlusions and size/perspective changes
-    # template_rect = {'x': None, 'y': None, 'w': None, 'h': None}  # Define the template window values
-    # run_particle_filter(MDParticleFilter,
-    #     os.path.join(input_dir, "pedestrians.mp4"),
-    #     template_rect,
-    #     {
-    #         'template': os.path.join(output_dir, 'ps7-5-a-1.png'),
-    #         40: os.path.join(output_dir, 'ps7-5-a-2.png'),
-    #         100: os.path.join(output_dir, 'ps7-5-a-3.png'),
-    #         240: os.path.join(output_dir, 'ps7-5-a-4.png')
-    #     },
-    #     num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn,
-    #     template_coords=template_rect)  # Add more if you need to
+
+    # 4: Discussion problems. See problem set document.
+
+    # 5: Implement a more sophisticated model to deal with occlusions and size/perspective changes
+    template_rect = {'x': None, 'y': None, 'w': None, 'h': None}  # Define the template window values
+    run_particle_filter(MDParticleFilter,
+        os.path.join(input_dir, "pedestrians.mp4"),
+        template_rect,
+        {
+            'template': os.path.join(output_dir, 'ps7-5-a-1.png'),
+            40: os.path.join(output_dir, 'ps7-5-a-2.png'),
+            100: os.path.join(output_dir, 'ps7-5-a-3.png'),
+            240: os.path.join(output_dir, 'ps7-5-a-4.png')
+        },
+        num_particles=num_particles, sigma_mse=sigma_mse, sigma_dyn=sigma_dyn,
+        template_coords=template_rect)  # Add more if you need to
 
 if __name__ == '__main__':
     main()

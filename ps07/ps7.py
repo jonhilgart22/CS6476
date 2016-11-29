@@ -298,7 +298,49 @@ class MeanShiftLitePF(ParticleFilter):
 
     # TODO: Override process() to implement appearance model update
     def process(self, frame):
-        pass
+        # sample from weighted distribution
+        self._sample()
+
+        normalization = 0.
+        # for each particle
+        for i, point in enumerate(self.particles):
+            x, y, w, h = self._get_box(point, self.template)
+            image = frame[y:y+h, x:x+w]
+
+            # TODO: should we pad the box?
+            if self.template.shape != image.shape:
+                continue
+
+            histogram_image = cv2.calcHist([image], [0, 1, 2], None, [self.num_bins] * 3, [0, 256, 0, 256, 0, 256])
+            histogram_template = cv2.calcHist([self.template], [0, 1, 2], None, [self.num_bins] * 3, [0, 256, 0, 256, 0, 256])
+
+            histogram_image = histogram_image.flatten()
+            histogram_template = histogram_template.flatten()
+
+            # normalize histograms
+            histogram_image /= np.sum(histogram_image)
+            histogram_template /= np.sum(histogram_template)
+
+            n = np.square(histogram_image - histogram_template)
+            d = histogram_image + histogram_template
+            # calculate chi_squared, the sum is computed for bins that is non zero
+            temp = np.divide(n, d)
+            chi_squared = np.sum(temp[np.where(np.invert(np.isnan(temp)))]) / 2.
+
+            p_zx = self._calculate_similarity(chi_squared)
+
+            # update the weights
+            self.weights[i] += p_zx
+            # keep track of normalization
+            normalization += self.weights[i]
+
+            # add noise
+            # TODO: should we mod by shape?
+            self.particles[i] = self.particles[i] + self._get_noise()
+
+        if normalization > 0:
+            self.weights /= normalization
+            self.weights /= np.sum(self.weights)
 
     # TODO: Override render() if desired (shouldn't have to, ideally)
 
