@@ -11,8 +11,8 @@ Vagrant.configure("2") do |config|
   # https://docs.vagrantup.com.
 
   if Vagrant.has_plugin?("vagrant-proxyconf")
-    config.proxy.http = ""
-    config.proxy.https = ""
+    config.proxy.http = "http://proxy-src.research.ge.com:8080"
+    config.proxy.https = "http://proxy-src.research.ge.com:8080"
     config.proxy.no_proxy = "localhost,127.0.0.1"
   end
 
