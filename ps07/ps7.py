@@ -365,6 +365,49 @@ class MDParticleFilter(ParticleFilter):
 
     # TODO: Override process() to implement appearance model update
     def process(self, frame):
-        pass
+        # sample from weighted distribution
+        self._sample()
+
+        normalization = 0.
+        template_list = []
+        scale_list = []
+        similarity_list = []
+        # for each particle
+        for i, point in enumerate(self.particles):
+            scale = np.random.random_integers(80, 100) / 100.
+            template = self.template.copy()
+            template = cv2.resize(template, (0, 0), fx=scale, fy=scale)
+            template_list.append(template)
+            scale_list.append(scale)
+
+            x, y, w, h = self._get_box(point, template)
+            image = frame[y:y+h, x:x+w]
+
+            # TODO: should we pad the box?
+            if template.shape != image.shape:
+                # print 'ne', template.shape, image.shape
+                continue
+
+            # calculate the similarity
+            mse = self._calculate_mse(template, image)
+            p_zx = self._calculate_similarity(mse)
+            similarity_list.append(p_zx)
+
+            # update the weights
+            self.weights[i] += p_zx
+            # keep track of normalization
+            normalization += self.weights[i]
+
+            # add noise
+            # TODO: should we mod by shape?
+            self.particles[i] = self.particles[i] + self._get_noise()
+
+        idx = np.argmax(similarity_list)
+        if scale_list[idx] > .95:
+            self.template = template_list[idx]
+
+        if normalization > 0:
+            self.weights /= normalization
+            self.weights /= np.sum(self.weights)
 
     # TODO: Override render() if desired (shouldn't have to, ideally)
