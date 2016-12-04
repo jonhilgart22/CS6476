@@ -1,4 +1,5 @@
 import os
+import time
 
 from ps8 import *
 
@@ -166,6 +167,7 @@ def match_features(a_features_dict, b_features_dict, n_actions, scale=1):
 
 def main():
     # Note: Comment out parts of this code as necessary
+    start = time.time()
 
     # 1a
     build_motion_history_image(MotionHistoryBuilder,  # motion history builder class
@@ -186,6 +188,22 @@ def main():
     # Specify any other keyword args that your motion history builder expects, e.g. theta, tau
 
     # TODO: Similarly for actions A2 & A3
+
+    # 1b A2
+    build_motion_history_image(MotionHistoryBuilder,  # motion history builder class
+                               os.path.join(input_dir, "PS8A2P1T1.mp4"),
+                               # TODO: choose sequence (person, trial) for action A2
+                               mhi_frame=90,  # TODO: pick a good frame to obtain MHI at, i.e. when action just ends
+                               mhi_filename=os.path.join(output_dir, 'ps8-1-b-2.png'))
+    # Specify any other keyword args that your motion history builder expects, e.g. theta, tau
+
+    # 1b A3
+    build_motion_history_image(MotionHistoryBuilder,  # motion history builder class
+                               os.path.join(input_dir, "PS8A3P1T1.mp4"),
+                               # TODO: choose sequence (person, trial) for action A3
+                               mhi_frame=90,  # TODO: pick a good frame to obtain MHI at, i.e. when action just ends
+                               mhi_filename=os.path.join(output_dir, 'ps8-1-b-3.png'))
+    # Specify any other keyword args that your motion history builder expects, e.g. theta, tau
 
     # 2a
     # Compute MHI and MEI features (unscaled and scaled central moments) for each video
@@ -209,28 +227,31 @@ def main():
     central_moment_features, scaled_moment_features = get_cs_moment_features(n_actions, n_participants, n_trials,
                                                                              default_params, custom_params)
 
-    # Match features in a leave-one-out scheme (each video with all others)
-    central_moments_confusion = match_features(central_moment_features, central_moment_features, n_actions)
-    print("Confusion matrix (unscaled central moments):-")
-    print(central_moments_confusion)
+    # # Match features in a leave-one-out scheme (each video with all others)
+    # central_moments_confusion = match_features(central_moment_features, central_moment_features, n_actions)
+    # print("Confusion matrix (unscaled central moments):-")
+    # print(central_moments_confusion)
+    #
+    # # Similarly with scaled moments
+    # scaled_moments_confusion = match_features(scaled_moment_features, scaled_moment_features, n_actions)
+    # print("Confusion matrix (scaled central moments):-")
+    # print(scaled_moments_confusion)
+    #
+    # # 2b
+    # # Match features by testing one participant at a time (i.e. taking them out)
+    # # Note: Pick one between central_moment_features and scaled_moment_features
+    # features_P1 = {key: feature for key, feature in scaled_moment_features.items() if key[1] == 1}
+    # features_sans_P1 = {key: feature for key, feature in scaled_moment_features.items() if key[1] != 1}
+    # confusion_P1 = match_features(features_P1, features_sans_P1, n_actions)
+    # print("Confusion matrix for P1:-")
+    # print(confusion_P1)
+    #
+    # # TODO: Similarly for participants P2 & P3
+    #
+    # # TODO: Finally find the Average confusion matrix of P1, P2, and P3
 
-    # Similarly with scaled moments
-    scaled_moments_confusion = match_features(scaled_moment_features, scaled_moment_features, n_actions)
-    print("Confusion matrix (scaled central moments):-")
-    print(scaled_moments_confusion)
-
-    # 2b
-    # Match features by testing one participant at a time (i.e. taking them out)
-    # Note: Pick one between central_moment_features and scaled_moment_features
-    features_P1 = {key: feature for key, feature in scaled_moment_features.items() if key[1] == 1}
-    features_sans_P1 = {key: feature for key, feature in scaled_moment_features.items() if key[1] != 1}
-    confusion_P1 = match_features(features_P1, features_sans_P1, n_actions)
-    print("Confusion matrix for P1:-")
-    print(confusion_P1)
-
-    # TODO: Similarly for participants P2 & P3
-
-    # TODO: Finally find the Average confusion matrix of P1, P2, and P3
+    elapsed_time = time.time() - start
+    print elapsed_time
 
 if __name__ == "__main__":
     main()
