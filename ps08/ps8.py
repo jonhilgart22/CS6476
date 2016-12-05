@@ -37,6 +37,8 @@ class MotionHistoryBuilder(object):
             motion_image (numpy.array): binary image (type: bool or uint8), values: 0 (static) or 1 (moving)
         """
         # TODO: Your code here - compute binary motion image, update MHI
+        # frame = cv2.GaussianBlur(cv2.cvtColor(frame.astype(np.float32), cv2.COLOR_BGR2GRAY), (21, 21), 15)
+        # gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         blurred_frame = cv2.GaussianBlur(frame, (15, 15), 11)
 
         # if the first frame, return zeros motion_image
@@ -62,8 +64,7 @@ class MotionHistoryBuilder(object):
         # if moving
         self.mhi[np.where(motion_image >= 1.)[:2]] = self.tau
 
-        # pass  # return motion_image  # note: make sure you return a binary image with 0s and 1s
-        return motion_image
+        return motion_image  # note: make sure you return a binary image with 0s and 1s
 
     def get_MHI(self):
         """Return motion history image computed so far.
@@ -92,6 +93,24 @@ class Moments(object):
         self.central_moments = np.zeros((1, 8))  # array: [mu20, mu11, mu02, mu30, mu21, mu12, mu03, mu22]
         self.scaled_moments = np.zeros((1, 8))  # array: [nu20, nu11, nu02, nu30, nu21, nu12, nu03, nu22]
         # Note: Make sure computed moments are in correct order
+        x, y = np.meshgrid(range(0, image.shape[1]), range(0, image.shape[0]))
+        M10 = np.sum(np.power(x, 1) * np.power(y, 0) * image)
+        M01 = np.sum(np.power(x, 0) * np.power(y, 1) * image)
+        M00 = np.sum(np.power(x, 0) * np.power(y, 0) * image)
+        x_bar = np.float(M10) / M00
+        y_bar = np.float(M01) / M00
+        x_minus_x_bar = x - x_bar
+        y_minus_y_bar = y - y_bar
+
+        mu00 = np.sum(np.power(x_minus_x_bar, 0) * np.power(y_minus_y_bar, 0) * image)
+
+        pq = [(2, 0), (1, 1), (0, 2), (3, 0), (2, 1), (1, 2), (0, 3), (2, 2)]
+
+        for i, (p, q) in enumerate(pq):
+            self.central_moments[0, i] = np.sum(np.power(x_minus_x_bar, p) * np.power(y_minus_y_bar, q) * image)
+
+        for i, (p, q) in enumerate(pq):
+            self.scaled_moments[0, i] = np.float(self.central_moments[0, i]) / np.power(mu00, 1 + ((p + q) / 2))
 
     def get_central_moments(self):
         """Return central moments as NumPy array.
@@ -130,4 +149,5 @@ def compute_feature_difference(a_features, b_features):
     """
     # TODO: Your code here - return feature difference using an appropriate measure
     # Tip: Scale/weight difference values to get better results as moment magnitudes differ
-    pass  # change to return diff
+    diff = np.sqrt(np.sum(np.square(a_features - b_features)))
+    return diff
