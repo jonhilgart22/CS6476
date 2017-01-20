@@ -2,3 +2,5 @@
 *.pyc
 student.zip
 .idea/
+output/
+ps01*.json
