@@ -17,7 +17,7 @@ def extractRed(image):
     Returns:
         numpy.array: Output 2D array containing the red channel.
     """
-    pass
+    return np.copy(image[:, :, 2])
 
 
 def extractGreen(image):
@@ -31,7 +31,7 @@ def extractGreen(image):
     Returns:
         numpy.array: Output 2D array containing the green channel.
     """
-    pass
+    return np.copy(image[:, :, 1])
 
 
 def extractBlue(image):
@@ -45,7 +45,7 @@ def extractBlue(image):
     Returns:
         numpy.array: Output 2D array containing the blue channel.
     """
-    pass   
+    return np.copy(image[:, :, 0])
 
 
 def swapGreenBlue(image):
@@ -60,7 +60,10 @@ def swapGreenBlue(image):
     Returns:
         numpy.array: Output 3D array with the green and blue channels swapped.
     """
-    pass
+    output = np.copy(image)
+    output[:, :, 0] = extractGreen(image)
+    output[:, :, 1] = extractBlue(image)
+    return output
 
 
 def copyPasteMiddle(src, dst, shape):
@@ -86,7 +89,23 @@ def copyPasteMiddle(src, dst, shape):
     Returns:
         numpy.array: Output monochrome image (2D array)
     """
-    pass
+    if len(src.shape) != 2 or len(dst.shape) != 2 or len(shape) != 2:
+        return dst
+
+    sx = int(math.floor((src.shape[0] - shape[0]) / 2))
+    sy = int(math.floor((src.shape[1] - shape[1]) / 2))
+    dx = int(math.floor((dst.shape[0] - shape[0]) / 2))
+    dy = int(math.floor((dst.shape[1] - shape[1]) / 2))
+    sx_end = sx + shape[0]
+    sy_end = sy + shape[1]
+    dx_end = dx + shape[0]
+    dy_end = dy + shape[1]
+
+    output = np.copy(dst)
+    # copy center of src with size shape to dst
+    output[dx:dx_end, dy:dy_end] = src[sx:sx_end, sy:sy_end]
+
+    return output
 
 
 def imageStats(image):
@@ -108,7 +127,11 @@ def imageStats(image):
                mean (float): Input array mean / average value.
                stddev (float): Input array standard deviation.
     """
-    pass
+    image_min = np.float(np.min(image))
+    image_max = np.float(np.max(image))
+    image_mean = np.mean(image)
+    image_stddev = np.std(image)
+    return image_min, image_max, image_mean, image_stddev
 
 
 def normalized(image, scale):
@@ -130,7 +153,9 @@ def normalized(image, scale):
     Returns:
         numpy.array: Output 2D image.
     """
-    pass
+    image_min, image_max, image_mean, image_stddev = imageStats(image)
+    output = (((image - image_mean) / image_stddev) * scale) + image_mean
+    return output.astype(np.uint8)
 
 
 def shiftImageLeft(image, shift):
@@ -155,7 +180,8 @@ def shiftImageLeft(image, shift):
     Returns:
         numpy.array: Output shifted 2D image.
     """
-    pass
+    # move image to the left by "shift" amount and replicate to fill the missing column
+    return cv2.copyMakeBorder(image[:, shift:], 0, 0, 0, shift, cv2.BORDER_REPLICATE)
 
 
 def differenceImage(img1, img2):
@@ -173,7 +199,13 @@ def differenceImage(img1, img2):
     Returns:
         numpy.array: Output 2D image containing the result of subtracting img2 from img1.
     """
-    pass
+    output = img1.astype(np.float) - img2.astype(np.float)
+    image_min, image_max, image_mean, image_stddev = imageStats(output)
+    denom = np.abs(image_max) + np.abs(image_min)
+    denom = denom or np.int(denom)
+    # normalize the difference to 0-255
+    output = (output + np.abs(image_min)) * np.divide((2 ** 8 - 1), denom)
+    return output
 
 
 def addNoise(image, channel, sigma):
@@ -201,4 +233,7 @@ def addNoise(image, channel, sigma):
         numpy.array: Output 3D array containing the result of adding Gaussian noise to the
             specified channel.
     """
-    pass
+    noise = np.random.randn(*image.shape) * sigma
+    output = np.copy(image).astype(np.float)
+    output[:, :, channel] += noise[:, :, channel]
+    return output
