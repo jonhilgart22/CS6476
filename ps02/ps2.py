@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 
 
-def hough_lines_acc(img_edges, rho_res, theta_res):
+def hough_lines_acc(img_edges, rho_res=1, theta_res=np.pi/180):
     """ Creates and returns a Hough accumulator array by computing the Hough Transform for lines on an
     edge image.
 
@@ -32,8 +32,25 @@ def hough_lines_acc(img_edges, rho_res, theta_res):
                rho (numpy.array): vector of rho values, one for each row of H
                theta (numpy.array): vector of theta values, one for each column of H.
     """
+    row_size, col_size = img_edges.shape
+    # construct theta array [0, pi)
+    theta = np.linspace(0, 180 * theta_res, 180, endpoint=False)
+    # get the maximum rho possible
+    rho_max = int(math.ceil(math.sqrt(row_size**2 + col_size**2)))
+    # construct the rho array
+    rho = np.linspace(-rho_max * rho_res, rho_max * rho_res, rho_max * 2, endpoint=False)
+    # initialize H[d, theta] = 0
+    H = np.zeros((rho.size, theta.size))
 
-    pass
+    rows, cols = np.where(img_edges == 255)
+    for index in xrange(len(rows)):
+        y, x = rows[index], cols[index]
+        d_list = (x * np.cos(theta)) + (y * np.sin(theta))  # maybe negative
+        for i, d in enumerate(d_list):
+            rho_index = np.argmin(np.abs(rho - d))
+            H[rho_index, i] += 1
+
+    return H, rho, theta
 
 
 def hough_peaks(H, hough_threshold, nhood_delta, rows=None, cols=None):
@@ -67,17 +84,46 @@ def hough_peaks(H, hough_threshold, nhood_delta, rows=None, cols=None):
     # In order to standardize the range of hough_threshold values let's work with a normalized version of H.
     H_norm = cv2.normalize(H.copy(), alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
 
-    # Your code here.
+    # get the possible peaks index given the threshold
+    p_rows, p_cols = np.where(H_norm >= hough_threshold)
+    # get the peak values
+    values = H_norm[p_rows, p_cols]
+    # arrange matrix in the order of [[x, y, value], [x, y, value]]
+    possible_peaks = np.transpose(np.concatenate((p_rows, p_cols, values)).reshape(3, values.size))
+    # sort descending order by value of the most voted peak
+    possible_peaks = possible_peaks[possible_peaks[:, 2].argsort()[::-1]]
+
+    # create a clone copy of H
+    newH = np.copy(H_norm)
+    new_possible_peaks = []
 
     # Once you have all the detected peaks, you can eliminate the ones that represent
     # the same line. This will only be helpful when working with Hough lines.
     # The autograder does not pass these parameters when using a Hough circles array because it is not
     # needed. You can opt out from implementing this part, make sure you comment it out or delete it.
-    if rows is not None and cols is not None:
-        # Aliasing Suppression.
-        pass
+    # if rows is not None and cols is not None:
+    cols_size, rows_size = H.shape
+    # Aliasing Suppression.
+    for peak in possible_peaks:
+        x = int(peak[0])
+        y = int(peak[1])
+        if newH[x, y] == peak[2]:
+            x0 = x - nhood_delta[1] if x >= nhood_delta[1] else 0
+            x1 = x + nhood_delta[1] if x <= (cols_size - nhood_delta[1]) else cols_size
+            y0 = y - nhood_delta[0] if y >= nhood_delta[1] else 0
+            y1 = y + nhood_delta[0] if y <= (rows_size - nhood_delta[0]) else rows_size
+            # set vaues around the peak to 0
+            newH[x0:x1, y0:y1] = 0
+            # restore the peak value
+            newH[x, y] = peak[2]
+            # only interested in the peaks that are not replaced
+            new_possible_peaks.append(peak)
 
-    pass
+    possible_peaks = np.array(new_possible_peaks)
+
+    # only return Q pairs
+    peaks = possible_peaks[:, :2].astype(np.int) if len(possible_peaks) > 0 else np.array([], dtype=np.int)
+    return peaks
 
 
 def hough_circles_acc(img_orig, img_edges, radius, point_plus=True):
@@ -102,7 +148,64 @@ def hough_circles_acc(img_orig, img_edges, radius, point_plus=True):
         numpy.array: Hough accumulator array.
     """
 
-    pass
+    row_size, col_size = img_edges.shape
+    # initialize H[a, b] = 0
+    H = np.zeros((row_size, col_size))
+
+    rows, cols = np.where(img_edges == 255)
+
+    if not point_plus:
+        theta_res = np.pi/180
+        theta = np.linspace(0, 360 * theta_res, 360, endpoint=False)
+
+        for index in xrange(len(rows)):
+            y, x = rows[index], cols[index]
+            a_list = np.round(y + radius * np.sin(theta)).astype(np.int)
+            b_list = np.round(x - radius * np.cos(theta)).astype(np.int)
+            for j in xrange(len(a_list)):
+                a, b = a_list[j], b_list[j]
+                if 0 <= a < row_size and 0 <= b < col_size:
+                    H[a, b] += 1
+    elif point_plus:
+        def get_bin_position(a, b, k=1):
+            y0 = a - k if a >= k else 0
+            y1 = a + k + 1
+            x0 = b - k if b >= k else 0
+            x1 = b + k + 1
+            return (x0, x1), (y0, y1)
+
+        grad_x = cv2.Sobel(img_orig, cv2.CV_64F, 1, 0, ksize=3)
+        grad_y = cv2.Sobel(img_orig, cv2.CV_64F, 0, 1, ksize=3)
+
+        for index in xrange(len(rows)):
+            y, x = rows[index], cols[index]
+            dx = grad_x[y, x]
+            dy = grad_y[y, x]
+            # get the theta
+            t = math.atan2(dy, dx)
+            # vote in both direction in and out the center
+            a1 = int(np.round(y + radius * math.sin(t)))  # row_id
+            b1 = int(np.round(x + radius * math.cos(t)))  # col_id
+            a2 = int(np.round(y - radius * math.sin(t)))  # row_id
+            b2 = int(np.round(x - radius * math.cos(t)))  # col_id
+            if 0 <= a1 < row_size and 0 <= b1 < col_size:
+                (x0, x1), (y0, y1) = get_bin_position(a1, b1)
+                H[y0:y1, x0:x1] += 1
+                H[a1, b1] += 10
+            if 0 <= a1 < row_size and 0 <= b2 < col_size:
+                (x0, x1), (y0, y1) = get_bin_position(a1, b2)
+                H[y0:y1, x0:x1] += 1
+                H[a1, b2] += 10
+            if 0 <= a2 < row_size and 0 <= b1 < col_size:
+                (x0, x1), (y0, y1) = get_bin_position(a2, b1)
+                H[y0:y1, x0:x1] += 1
+                H[a2, b1] += 10
+            if 0 <= a2 < row_size and 0 <= b2 < col_size:
+                (x0, x1), (y0, y1) = get_bin_position(a2, b2)
+                H[y0:y1, x0:x1] += 1
+                H[a2, b2] += 10
+
+    return H
 
 
 def find_circles(img_orig, edge_img, radii, hough_threshold, nhood_delta):
@@ -130,9 +233,42 @@ def find_circles(img_orig, edge_img, radii, hough_threshold, nhood_delta):
         numpy.array: array with the circles position and radius where each row
                      contains [row_id, col_id, radius]
     """
+    row_size, col_size = edge_img.shape
+    H = np.zeros((row_size, col_size, 0))
+    row_range = np.linspace(0, col_size - 1, col_size)
+    col_range = np.linspace(0, row_size - 1, row_size)
+    peaks = np.zeros((0, 4))
+    circles = np.zeros((0, 4))
+    for r_index, r in enumerate(radii):
+        # vote for circles given radius r
+        h = hough_circles_acc(img_orig, edge_img, radius=r, point_plus=True)
+        H = np.concatenate((H, h.reshape((row_size, col_size, 1))), axis=2)
+        # get the possible peaks for radius r
+        possible_peaks = hough_peaks(h, hough_threshold=hough_threshold, nhood_delta=nhood_delta)
+        if len(possible_peaks) > 0:
+            values = h[possible_peaks[:, 0], possible_peaks[:, 1]]
+            # insert radius to the matrix
+            possible_peaks = np.insert(possible_peaks, possible_peaks.shape[1], r_index, axis=1)
+            # concat peaks with values
+            possible_peaks = np.concatenate((possible_peaks, values.reshape(values.shape[0], 1)), axis=1)
+            peaks = np.concatenate((peaks, possible_peaks))
 
-    pass
+    peaks = peaks[peaks[:, peaks.shape[1]-1].argsort()[::-1]].astype(np.int)
 
+    # Since our H is 3-D, we want to use the most voted circle and remove the other radius
+    for peak in peaks:
+        x, y, z = peak[:3]
+        if H[x, y, z] == peak[3]:
+            x0 = x - nhood_delta[1] if x >= nhood_delta[1] else 0
+            x1 = x + nhood_delta[1] + 1 if x <= (col_range.size - nhood_delta[1]) else col_range.size
+            y0 = y - nhood_delta[0] if y >= nhood_delta[0] else 0
+            y1 = y + nhood_delta[0] + 1 if y <= (row_range.size - nhood_delta[0]) else row_range.size
+            # set values around the peak to 0
+            for i in xrange(len(radii)):
+                H[x0:x1, y0:y1, i] = 0
+            # restore the peak value
+            H[x, y, z] = peak[3]
+            # only interested in the peaks that are not replaced
+            circles = np.concatenate((circles, [[x, y, radii[z], peak[3]]]))
 
-
-
+    return circles[:, :3]
