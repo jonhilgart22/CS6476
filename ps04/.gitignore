@@ -1,3 +1,6 @@
-.idea/
 *~
 *.pyc
+student.zip
+.idea/
+output/
+ps04*.json
