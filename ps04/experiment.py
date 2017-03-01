@@ -75,7 +75,7 @@ def get_new_f(f_hat, t_a, t_b):
     Returns:
         numpy.array: rectified fundamental matrix.
     """
-    pass
+    return np.dot(t_b.T, np.dot(f_hat, t_a))
 
 
 def part_1():
@@ -115,7 +115,13 @@ def part_2():
         print "Average Residuals:\n {}".format(avg_residuals)
         print "-" * 15 + "\n"
 
+    best_residuals = None
     best_m = None  # Pick the best m from k = 8, 12, or 16 stored in results_dict
+    for k, values in results_dict.iteritems():
+        lowest_residuals = np.min(values[-1])
+        if best_residuals is None or best_residuals > lowest_residuals:
+            best_residuals = lowest_residuals
+            best_m = values[0]
 
     camera_center = get_camera_center(best_m)
     print "Camera center: {}\n".format(camera_center)
