@@ -1,0 +1,6 @@
+*~
+*.pyc
+student.zip
+.idea/
+output/
+ps05*.json
