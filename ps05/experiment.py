@@ -62,9 +62,11 @@ def draw_keypoints(keypoints, r_map):
         numpy.array: output image with keypoints drawn on it.
     """
     # Start by normalizing the r_map setting its values to a range in [0, 255]
+    r_map_norm = cv2.normalize(r_map, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    image_out = cv2.cvtColor(r_map_norm, cv2.COLOR_GRAY2BGR)
+    image_out = cv2.drawKeypoints(image_out, keypoints)
 
-    # Todo: Your code here.
-    pass
+    return image_out
 
 
 def draw_consensus_set(good_matches, image_pair, image_a_shape):
@@ -86,9 +88,32 @@ def draw_consensus_set(good_matches, image_pair, image_a_shape):
         numpy.array: copy of the image pair with the consensus set of matches drawn on.
     """
     # Start by normalizing the r_map setting its values to a range in [0, 255] and convert it to BGR
+    image_out = cv2.normalize(image_pair, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    image_out = cv2.cvtColor(image_out, cv2.COLOR_GRAY2BGR)
 
-    # Todo: Your code here.
-    pass
+    colors = [
+        (26, 188, 156),
+        (46, 204, 113),
+        (52, 152, 219),
+        (155, 89, 182),
+        (241, 196, 15),
+        (230, 126, 34),
+        (231, 76, 60),
+        (22, 160, 133),
+        (39, 174, 96),
+        (41, 128, 185),
+        (142, 68, 173),
+        (243, 156, 18),
+        (211, 84, 0),
+        (192, 57, 43)
+    ]
+
+    for i, match in enumerate(good_matches):
+        x1, y1 = np.array(match.queryPt, dtype=np.int)
+        x2, y2 = np.array(match.trainPt, dtype=np.int)
+        cv2.line(image_out, (x1, y1), (x2 + image_a_shape[1], y2), color=colors[i % len(colors)])
+
+    return image_out
 
 
 def part_1a(ps5_obj, save_imgs=True):
@@ -111,12 +136,12 @@ def part_1a(ps5_obj, save_imgs=True):
 def part_1b(ps5_obj, save_imgs=True):
 
     # Todo: Define the kernel dimensions for each image
-    kernel_dims = {"trans_a": (0, 0), "trans_b": (0, 0),
-                   "sim_a": (0, 0), "sim_b": (0, 0)}
+    kernel_dims = {"trans_a": (3, 3), "trans_b": (3, 3),
+                   "sim_a": (3, 3), "sim_b": (3, 3)}
 
     # Todo: Define alpha values for each image (floats)
-    alpha = {"trans_a": 0., "trans_b": 0.,
-             "sim_a": 0., "sim_b": 0.}
+    alpha = {"trans_a": 0.06, "trans_b": 0.06,
+             "sim_a": 0.06, "sim_b": 0.06}
 
     ps5_obj.calculate_r_maps(kernel_dims, alpha)
 
@@ -136,12 +161,12 @@ def part_1c(ps5_obj, save_imgs=True):
     part_1b(ps5_obj, False)  # sets up arrays object from last part
 
     # Todo: Define the threshold values dimensions for each image (float)
-    threshold = {"trans_a": 0., "trans_b": 0.,
-                 "sim_a": 0., "sim_b": 0.}
+    threshold = {"trans_a": 0.5, "trans_b": 0.5,
+                 "sim_a": 0.5, "sim_b": 0.5}
 
     # Todo: Define the radius values for each image (int)
-    radius = {"trans_a": 0, "trans_b": 0,
-              "sim_a": 0, "sim_b": 0}
+    radius = {"trans_a": 5, "trans_b": 5,
+              "sim_a": 5, "sim_b": 5}
 
     ps5_obj.find_corners(threshold, radius)
 
@@ -165,8 +190,8 @@ def part_2a(ps5_obj, save_imgs=True):
     part_1c(ps5_obj, False)  # sets up arrays object from last part
 
     # Todo: Define size values to be used in ps5.get_keypoints
-    size = {"trans_a": 0., "trans_b": 0.,
-            "sim_a": 0., "sim_b": 0.}
+    size = {"trans_a": 10., "trans_b": 10.,
+            "sim_a": 10., "sim_b": 10.}
 
     # You can leave these values to 0
     octave = {"trans_a": 0, "trans_b": 0,
@@ -218,7 +243,7 @@ def part_3a(ps5_obj):
     k_pts = ps5_obj.get_keypoints()
     matches = ps5_obj.get_matches()
 
-    threshold = 0.  # Todo: Define a threshold value.
+    threshold = 15.  # Todo: Define a threshold value.
     translation, good_matches = ps5.compute_translation_RANSAC(k_pts["trans_a"], k_pts["trans_b"],
                                                                matches["trans"], threshold)
 
@@ -237,7 +262,7 @@ def part_3b(ps5_obj, save_imgs=True):
     k_pts = ps5_obj.get_keypoints()
     matches = ps5_obj.get_matches()
 
-    threshold = 0.  # Todo: Define a threshold value.
+    threshold = 10.  # Todo: Define a threshold value.
     similarity, sim_good_matches = ps5.compute_similarity_RANSAC(k_pts["sim_a"], k_pts["sim_b"],
                                                                  matches["sim"], threshold)
 
@@ -259,7 +284,7 @@ def part_3c(ps5_obj, save_imgs=True):
     k_pts = ps5_obj.get_keypoints()
     matches = ps5_obj.get_matches()
 
-    threshold = 0.  # Todo: Define a threshold value.
+    threshold = 15.  # Todo: Define a threshold value.
     similarity_affine, sim_aff_good_matches = ps5.compute_affine_RANSAC(k_pts["sim_a"], k_pts["sim_b"],
                                                                         matches["sim"], threshold)
 
