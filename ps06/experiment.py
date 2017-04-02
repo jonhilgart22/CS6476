@@ -57,9 +57,15 @@ def scale_u_and_v(u, v, level, pyr):
             u (numpy.array): scaled U array of shape equal to pyr[0].shape
             v (numpy.array): scaled V array of shape equal to pyr[0].shape
     """
+    for lvl in xrange(level-1, -1, -1):
+        u = ps6.expand_image(u) * 2
+        v = ps6.expand_image(v) * 2
 
-    # Todo: Your code here
-    pass
+        h, w = pyr[lvl].shape
+        u = u[:h, :w]
+        v = v[:h, :w]
+
+    return u, v
 
 
 def part_1a():
@@ -69,8 +75,8 @@ def part_1a():
     shift_r5_u5 = cv2.imread(os.path.join(input_dir, 'TestSeq', 'ShiftR5U5.png'), 0) / 255.
 
     # Optional: smooth the images if LK doesn't work well on raw images
-    k_size = 0  # Select a kernel size
-    k_type = ""  # Select a kernel type
+    k_size = 25  # Select a kernel size
+    k_type = 'uniform'  # Select a kernel type
     sigma = 0  # Select a sigma value if you are using a gaussian kernel
     u, v = ps6.optic_flow_lk(shift_0, shift_r2, k_size, k_type, sigma)
 
@@ -83,14 +89,14 @@ def part_1a():
     cv2.imwrite(os.path.join(output_dir, "ps6-1-a-1.png"), u_v)
 
     # Flow image
-    # u_v = quiver(u, v, scale=3, stride=10)
-    # cv2.imwrite(os.path.join(output_dir, "ps6-1-a-1.png"), u_v)
+    u_v = quiver(u, v, scale=3, stride=10)
+    cv2.imwrite(os.path.join(output_dir, "ps6-1-a-1.quiver.png"), u_v)
 
     # Now let's try with ShiftR5U5. You may want to try smoothing the input images first.
     shift_0_blurred = cv2.GaussianBlur(shift_0, (7, 7), 2)
 
-    k_size = 0  # Select a kernel size
-    k_type = ""  # Select a kernel type
+    k_size = 45  # Select a kernel size
+    k_type = 'uniform'  # Select a kernel type
     sigma = 0  # Select a sigma value if you are using a gaussian kernel
     u, v = ps6.optic_flow_lk(shift_0_blurred, shift_r5_u5, k_size, k_type, sigma)
 
@@ -99,8 +105,8 @@ def part_1a():
     cv2.imwrite(os.path.join(output_dir, "ps6-1-a-2.png"), u_v)
 
     # Flow image
-    # u_v = quiver(u, v, scale=3, stride=10)
-    # cv2.imwrite(os.path.join(output_dir, "ps6-1-a-2.png"), u_v)
+    u_v = quiver(u, v, scale=3, stride=10)
+    cv2.imwrite(os.path.join(output_dir, "ps6-1-a-2.quiver.png"), u_v)
 
 
 def part_1b():
@@ -126,8 +132,56 @@ def part_1b():
     shift_r20 = cv2.imread(os.path.join(input_dir, 'TestSeq', 'ShiftR20.png'), 0) / 255.
     shift_r40 = cv2.imread(os.path.join(input_dir, 'TestSeq', 'ShiftR40.png'), 0) / 255.
 
-    # Todo: Your code here
-    pass
+    shift_0_blurred = cv2.GaussianBlur(shift_0, (5, 5), 2)
+    shift_r10_blurred = cv2.GaussianBlur(shift_r10, (5, 5), 2)
+    shift_r20_blurred = cv2.GaussianBlur(shift_r20, (5, 5), 2)
+    shift_r40_blurred = cv2.GaussianBlur(shift_r40, (5, 5), 2)
+
+    # r10
+    # Optional: smooth the images if LK doesn't work well on raw images
+    k_size = 46  # Select a kernel size
+    k_type = 'uniform'  # Select a kernel type
+    sigma = 0  # Select a sigma value if you are using a gaussian kernel
+    u, v = ps6.optic_flow_lk(shift_0_blurred, shift_r10_blurred, k_size, k_type, sigma)
+
+    # Jet colormap
+    u_v = jet_colormaps(u, v)
+    cv2.imwrite(os.path.join(output_dir, "ps6-1-b-1.png"), u_v)
+
+    # Flow image
+    u_v = quiver(u, v, scale=3, stride=10)
+    cv2.imwrite(os.path.join(output_dir, "ps6-1-b-1.quiver.png"), u_v)
+
+    # r20
+    # Optional: smooth the images if LK doesn't work well on raw images
+    k_size = 54  # Select a kernel size
+    k_type = 'uniform'  # Select a kernel type
+    sigma = 0  # Select a sigma value if you are using a gaussian kernel
+    u, v = ps6.optic_flow_lk(shift_0_blurred, shift_r20_blurred, k_size, k_type, sigma)
+
+    # Jet colormap
+    u_v = jet_colormaps(u, v)
+    cv2.imwrite(os.path.join(output_dir, "ps6-1-b-2.png"), u_v)
+
+    # Flow image
+    u_v = quiver(u, v, scale=3, stride=10)
+    cv2.imwrite(os.path.join(output_dir, "ps6-1-b-2.quiver.png"), u_v)
+
+    # r40
+    # Optional: smooth the images if LK doesn't work well on raw images
+    k_size = 46  # Select a kernel size
+    k_type = 'uniform'  # Select a kernel type
+    sigma = 0  # Select a sigma value if you are using a gaussian kernel
+    u, v = ps6.optic_flow_lk(shift_0_blurred, shift_r40_blurred, k_size, k_type, sigma)
+
+    # Jet colormap
+    u_v = jet_colormaps(u, v)
+    cv2.imwrite(os.path.join(output_dir, "ps6-1-b-3.png"), u_v)
+
+    # Flow image
+    u_v = quiver(u, v, scale=3, stride=10)
+    cv2.imwrite(os.path.join(output_dir, "ps6-1-b-3.quiver.png"), u_v)
+
 
 
 def part_2a_2b(save_imgs=True):
@@ -155,48 +209,48 @@ def part_3a_1():
 
     yos_img_02 = cv2.imread(os.path.join(input_dir, 'DataSeq1', 'yos_img_02.jpg'), 0) / 255.
 
-    levels = 1  # Define the number of levels to build the gaussian pyramid
+    levels = 4  # Define the number of levels to build the gaussian pyramid
     yos_img_02_g_pyr = ps6.gaussian_pyramid(yos_img_02, levels)
 
-    level_id = 1  # Select the level number (or id) you wish to use
-    k_size = 0  # Select a kernel size
-    k_type = ""  # Select a kernel type
+    level_id = 3  # Select the level number (or id) you wish to use
+    k_size = 15  # Select a kernel size
+    k_type = "uniform"  # Select a kernel type
     sigma = 0  # Select a sigma value if you are using a gaussian kernel
     u, v = ps6.optic_flow_lk(yos_img_01_g_pyr[level_id], yos_img_02_g_pyr[level_id],
                              k_size, k_type, sigma)  # You may use different k_size and k_type
 
     u, v = scale_u_and_v(u, v, level_id, yos_img_02_g_pyr)
 
-    interpolation = None  # Select an interpolation method (see cv2.remap)
-    border_mode = None  # Select a pixel extrapolation method (see cv2.remap)
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
     yos_img_02_warped = ps6.warp(yos_img_02, u, v, interpolation, border_mode)
 
-    scale = None  # define a scale value
-    stride = None  # define a stride value
+    scale = 3  # define a scale value
+    stride = 10  # define a stride value
     yos_img_01_02_flow = quiver(u, v, scale, stride)
     diff_yos_img_01_02 = yos_img_01 - yos_img_02_warped  # difference image
 
     # We will repeat the same process to obtain the difference image using yos_img_02 and yos_img_03
     yos_img_03 = cv2.imread(os.path.join(input_dir, 'DataSeq1', 'yos_img_03.jpg'), 0) / 255.
 
-    levels = 1  # Define the number of levels to build the gaussian pyramid
+    levels = 4  # Define the number of levels to build the gaussian pyramid
     yos_img_03_g_pyr = ps6.gaussian_pyramid(yos_img_03, levels)
 
-    level_id = 1  # Select the level number (or id) you wish to use
-    k_size = 0  # Select a kernel size
-    k_type = ""  # Select a kernel type
+    level_id = 3  # Select the level number (or id) you wish to use
+    k_size = 15  # Select a kernel size
+    k_type = "uniform"  # Select a kernel type
     sigma = 0  # Select a sigma value if you are using a gaussian kernel
     u, v = ps6.optic_flow_lk(yos_img_02_g_pyr[level_id], yos_img_03_g_pyr[level_id],
                              k_size, k_type, sigma)  # You may use different k_size and k_type
 
     u, v = scale_u_and_v(u, v, level_id, yos_img_03_g_pyr)
 
-    scale = None  # define a scale value
-    stride = None  # define a stride value
+    scale = 3  # define a scale value
+    stride = 10  # define a stride value
     yos_img_02_03_flow = quiver(u, v, scale, stride)
 
-    interpolation = None  # Select an interpolation method (see cv2.remap)
-    border_mode = None  # Select a pixel extrapolation method (see cv2.remap)
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
     yos_img_03_warped = ps6.warp(yos_img_03, u, v, interpolation, border_mode)
     diff_yos_img_02_03 = yos_img_02 - yos_img_03_warped
 
@@ -231,6 +285,57 @@ def part_3a_2():
     dtsq2_03 = cv2.imread(os.path.join(input_dir, 'DataSeq2', '2.png'), 0) / 255.
 
     # Todo: Your code here
+    levels = 4
+    dtsq2_01_g_pyr = ps6.gaussian_pyramid(dtsq2_01, levels)
+    dtsq2_02_g_pyr = ps6.gaussian_pyramid(dtsq2_02, levels)
+    dtsq2_03_g_pyr = ps6.gaussian_pyramid(dtsq2_03, levels)
+
+    level_id = 3  # Select the level number (or id) you wish to use
+    k_size = 15  # Select a kernel size
+    k_type = "uniform"  # Select a kernel type
+    sigma = 0  # Select a sigma value if you are using a gaussian kernel
+    u, v = ps6.optic_flow_lk(dtsq2_01_g_pyr[level_id], dtsq2_02_g_pyr[level_id],
+                             k_size, k_type, sigma)  # You may use different k_size and k_type
+
+    u, v = scale_u_and_v(u, v, level_id, dtsq2_02_g_pyr)
+
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
+    dtsq2_02_warped = ps6.warp(dtsq2_02, u, v, interpolation, border_mode)
+
+    scale = 3  # define a scale value
+    stride = 10  # define a stride value
+    dtsq2_01_02_flow = quiver(u, v, scale, stride)
+    diff_dtsq2_01_02 = dtsq2_01 - dtsq2_02_warped  # difference image
+
+    # We will repeat the same process to obtain the difference image using dtsq2_02 and dtsq2_03
+    levels = 4  # Define the number of levels to build the gaussian pyramid
+    dtsq2_03_g_pyr = ps6.gaussian_pyramid(dtsq2_03, levels)
+
+    level_id = 3  # Select the level number (or id) you wish to use
+    k_size = 15  # Select a kernel size
+    k_type = "uniform"  # Select a kernel type
+    sigma = 0  # Select a sigma value if you are using a gaussian kernel
+    u, v = ps6.optic_flow_lk(dtsq2_02_g_pyr[level_id], dtsq2_03_g_pyr[level_id],
+                             k_size, k_type, sigma)  # You may use different k_size and k_type
+
+    u, v = scale_u_and_v(u, v, level_id, dtsq2_03_g_pyr)
+
+    scale = 3  # define a scale value
+    stride = 10  # define a stride value
+    dtsq2_02_03_flow = quiver(u, v, scale, stride)
+
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
+    dtsq2_03_warped = ps6.warp(dtsq2_03, u, v, interpolation, border_mode)
+    diff_dtsq2_02_03 = dtsq2_02 - dtsq2_03_warped
+
+    cv2.imwrite(os.path.join(output_dir, "ps6-3-a-3.png"),
+                np.concatenate((dtsq2_01_02_flow, dtsq2_02_03_flow), axis=0))
+    cv2.imwrite(os.path.join(output_dir, "ps6-3-a-4.png"),
+                np.concatenate((ps6.normalize_and_scale(diff_dtsq2_01_02),
+                                ps6.normalize_and_scale(diff_dtsq2_02_03)), axis=0))
+
 
 
 def part_4a():
@@ -239,12 +344,12 @@ def part_4a():
     shift_r20 = cv2.imread(os.path.join(input_dir, 'TestSeq', 'ShiftR20.png'), 0) / 255.
     shift_r40 = cv2.imread(os.path.join(input_dir, 'TestSeq', 'ShiftR40.png'), 0) / 255.
 
-    levels = 1  # Define the number of levels
-    k_size = 0  # Select a kernel size
-    k_type = ""  # Select a kernel type
+    levels = 4  # Define the number of levels
+    k_size = 25  # Select a kernel size
+    k_type = "uniform"  # Select a kernel type
     sigma = 0  # Select a sigma value if you are using a gaussian kernel
-    interpolation = None  # Select an interpolation method (see cv2.remap)
-    border_mode = None  # Select a pixel extrapolation method (see cv2.remap)
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
 
     u10, v10 = ps6.hierarchical_lk(shift_0, shift_r10, levels, k_size, k_type, sigma, interpolation, border_mode)
     jet_u10_v10 = jet_colormaps(u10, v10)
@@ -260,8 +365,8 @@ def part_4a():
     cv2.imwrite(os.path.join(output_dir, "ps6-4-a-1.png"), jets_stacked)
 
     # Save difference between each warped image and original image (Shift0), stacked
-    interpolation = None  # Select an interpolation method (see cv2.remap)
-    border_mode = None  # Select a pixel extrapolation method (see cv2.remap)
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
     shift_r10_warped = ps6.warp(shift_r10, u10, v10, interpolation, border_mode)
     shift_r20_warped = ps6.warp(shift_r20, u20, v20, interpolation, border_mode)
     shift_r40_warped = ps6.warp(shift_r40, u40, v40, interpolation, border_mode)
@@ -300,7 +405,36 @@ def part_4b():
     yos_img_02 = cv2.imread(os.path.join(input_dir, 'DataSeq1', 'yos_img_02.jpg'), 0) / 255.0
     yos_img_03 = cv2.imread(os.path.join(input_dir, 'DataSeq1', 'yos_img_03.jpg'), 0) / 255.0
 
-    # Todo: Your code here
+    levels = 4  # Define the number of levels
+    k_size = 35  # Select a kernel size
+    k_type = "uniform"  # Select a kernel type
+    sigma = 0  # Select a sigma value if you are using a gaussian kernel
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
+
+    u1, v1 = ps6.hierarchical_lk(yos_img_01, yos_img_02, levels, k_size, k_type, sigma, interpolation, border_mode)
+    jet_u1_v1 = jet_colormaps(u1, v1)
+
+    # You may want to try different parameters for the remaining function calls.
+    u2, v2 = ps6.hierarchical_lk(yos_img_01, yos_img_03, levels, k_size, k_type, sigma, interpolation, border_mode)
+    jet_u2_v2 = jet_colormaps(u2, v2)
+
+    jets_stacked = np.concatenate((jet_u1_v1, jet_u2_v2), axis=0)
+    cv2.imwrite(os.path.join(output_dir, "ps6-4-b-1.png"), jets_stacked)
+
+    # Save difference between each warped image and original image (Shift0), stacked
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
+    shift_r2_warped = ps6.warp(yos_img_02, u1, v1, interpolation, border_mode)
+    shift_r3_warped = ps6.warp(yos_img_03, u2, v2, interpolation, border_mode)
+
+    diff_1_2 = shift_r2_warped - yos_img_01
+    diff_1_3 = shift_r3_warped - yos_img_01
+
+    diff_stacked = np.concatenate((ps6.normalize_and_scale(diff_1_2),
+                                   ps6.normalize_and_scale(diff_1_3)),
+                                  axis=0)
+    cv2.imwrite(os.path.join(output_dir, "ps6-4-b-2.png"), diff_stacked)
 
 
 def part_4c():
@@ -326,7 +460,36 @@ def part_4c():
     dtsq2_02 = cv2.imread(os.path.join(input_dir, 'DataSeq2', '1.png'), 0) / 255.
     dtsq2_03 = cv2.imread(os.path.join(input_dir, 'DataSeq2', '2.png'), 0) / 255.
 
-    # Todo: Your code here
+    levels = 5  # Define the number of levels
+    k_size = 15  # Select a kernel size
+    k_type = "uniform"  # Select a kernel type
+    sigma = 0  # Select a sigma value if you are using a gaussian kernel
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
+
+    u1, v1 = ps6.hierarchical_lk(dtsq2_01, dtsq2_02, levels, k_size, k_type, sigma, interpolation, border_mode)
+    jet_u1_v1 = jet_colormaps(u1, v1)
+
+    # You may want to try different parameters for the remaining function calls.
+    u2, v2 = ps6.hierarchical_lk(dtsq2_01, dtsq2_03, levels, k_size, k_type, sigma, interpolation, border_mode)
+    jet_u2_v2 = jet_colormaps(u2, v2)
+
+    jets_stacked = np.concatenate((jet_u1_v1, jet_u2_v2), axis=0)
+    cv2.imwrite(os.path.join(output_dir, "ps6-4-c-1.png"), jets_stacked)
+
+    # Save difference between each warped image and original image (Shift0), stacked
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
+    shift_r2_warped = ps6.warp(dtsq2_02, u1, v1, interpolation, border_mode)
+    shift_r3_warped = ps6.warp(dtsq2_03, u2, v2, interpolation, border_mode)
+
+    diff_1_2 = shift_r2_warped - dtsq2_01
+    diff_1_3 = shift_r3_warped - dtsq2_01
+
+    diff_stacked = np.concatenate((ps6.normalize_and_scale(diff_1_2),
+                                   ps6.normalize_and_scale(diff_1_3)),
+                                  axis=0)
+    cv2.imwrite(os.path.join(output_dir, "ps6-4-d-2.png"), diff_stacked)
 
 
 def part_5a():
@@ -352,11 +515,40 @@ def part_5a():
         None
     """
 
-    juggle_01 = cv2.imread(os.path.join(input_dir, 'Juggle', '0.png'))
-    juggle_02 = cv2.imread(os.path.join(input_dir, 'Juggle', '1.png'))
-    juggle_03 = cv2.imread(os.path.join(input_dir, 'Juggle', '2.png'))
+    juggle_01 = cv2.imread(os.path.join(input_dir, 'Juggle', '0.png'), 0) / 255.
+    juggle_02 = cv2.imread(os.path.join(input_dir, 'Juggle', '1.png'), 0) / 255.
+    juggle_03 = cv2.imread(os.path.join(input_dir, 'Juggle', '2.png'), 0) / 255.
 
-    # Todo: Your code here
+    levels = 3  # Define the number of levels
+    k_size = 25  # Select a kernel size
+    k_type = "uniform"  # Select a kernel type
+    sigma = 0  # Select a sigma value if you are using a gaussian kernel
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
+
+    u1, v1 = ps6.hierarchical_lk(juggle_01, juggle_02, levels, k_size, k_type, sigma, interpolation, border_mode)
+    jet_u1_v1 = jet_colormaps(u1, v1)
+
+    # You may want to try different parameters for the remaining function calls.
+    u2, v2 = ps6.hierarchical_lk(juggle_01, juggle_03, levels, k_size, k_type, sigma, interpolation, border_mode)
+    jet_u2_v2 = jet_colormaps(u2, v2)
+
+    jets_stacked = np.concatenate((jet_u1_v1, jet_u2_v2), axis=0)
+    cv2.imwrite(os.path.join(output_dir, "ps6-5-a-1.png"), jets_stacked)
+
+    # Save difference between each warped image and original image (Shift0), stacked
+    interpolation = cv2.INTER_CUBIC  # Select an interpolation method (see cv2.remap)
+    border_mode = cv2.BORDER_REFLECT101  # Select a pixel extrapolation method (see cv2.remap)
+    shift_r2_warped = ps6.warp(juggle_02, u1, v1, interpolation, border_mode)
+    shift_r3_warped = ps6.warp(juggle_03, u2, v2, interpolation, border_mode)
+
+    diff_1_2 = shift_r2_warped - juggle_01
+    diff_1_3 = shift_r3_warped - juggle_01
+
+    diff_stacked = np.concatenate((ps6.normalize_and_scale(diff_1_2),
+                                   ps6.normalize_and_scale(diff_1_3)),
+                                  axis=0)
+    cv2.imwrite(os.path.join(output_dir, "ps6-5-a-2.png"), diff_stacked)
 
 
 if __name__ == "__main__":
