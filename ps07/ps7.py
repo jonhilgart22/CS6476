@@ -41,7 +41,7 @@ class ParticleFilter(object):
         """
 
         self.num_particles = kwargs.get('num_particles')  # required by the autograder
-        self.sigma_exp = kwargs.get('sigma_exp')  # required by the autograder
+        self.sigma_exp = kwargs.get('sigma_exp') / 2.  # required by the autograder
         self.sigma_dyn = kwargs.get('sigma_dyn')  # required by the autograder
         self.template_rect = kwargs.get('template_coords')  # required by the autograder
         # If you want to add more parameters, make sure you set a default value so that
@@ -52,9 +52,17 @@ class ParticleFilter(object):
 
         self.template = template
         self.frame = frame
-        self.particles = None  # Todo: Initialize your particles array. Read the docstring.
-        self.weights = None  # Todo: Initialize your weights array. Read the docstring.
+        height, width = self.frame.shape[:2]
+        self.particles = np.array([self._generate_random_particle(width, height) for _ in xrange(self.num_particles)])
+        self.weights = np.ones(self.num_particles) / self.num_particles
         # Initialize any other components you may need when designing your filter.
+
+    @staticmethod
+    def _generate_random_particle(width, height):
+        """
+        Method to get a random particle pair
+        """
+        return [np.random.choice(height), np.random.choice(width)]
 
     def get_particles(self):
         """Returns the current particles state.
@@ -79,6 +87,46 @@ class ParticleFilter(object):
 
         return self.weights
 
+    def _sample(self):
+        """
+        Method to sample from the weighted distribution
+        :return:
+        """
+        new_particles = np.zeros((0, 2))
+        new_weights = np.array([])
+        # get the number of sample needed for each index
+        distribution = np.random.multinomial(self.num_particles, self.weights, size=1)
+
+        for i, n in enumerate(distribution.reshape(self.num_particles)):
+            new_particles = np.append(new_particles, np.full((n, 2), self.particles[i]), axis=0)
+            new_weights = np.append(new_weights, np.full((n,), self.weights[i]), axis=0)
+
+        self.particles = new_particles
+        self.weights = new_weights / np.sum(new_weights)
+
+    @staticmethod
+    def _get_box(center, template):
+        cy, cx = center
+        h, w = template.shape[:2]
+        x = int(cx - (w / 2))
+        y = int(cy - (h / 2))
+        return x, y, w, h
+
+    @staticmethod
+    def _calculate_mse(template, image):
+        mse = np.sum(np.abs(template.astype(np.float) - image.astype(np.float)))
+        mse /= np.float(template.shape[0] * template.shape[1])
+        return mse
+
+    def _calculate_similarity(self, mse):
+        similarity = np.exp(-mse / (2 * np.square(self.sigma_exp)))
+        return similarity
+
+    def _get_noise(self):
+        du = np.random.randint(-self.sigma_dyn, self.sigma_dyn + 1)
+        dv = np.random.randint(-self.sigma_dyn, self.sigma_dyn + 1)
+        return np.array([du, dv])
+
     def process(self, frame):
         """Processes a video frame (image) and updates the filter's state.
 
@@ -94,7 +142,35 @@ class ParticleFilter(object):
         Returns:
             None.
         """
-        pass
+        # sample from weighted distribution
+        self._sample()
+
+        normalization = 0.
+        # for each particle
+        for i, point in enumerate(self.particles):
+            x, y, w, h = self._get_box(point, self.template)
+            image = frame[y:y+h, x:x+w]
+
+            # TODO: should we pad the box?
+            if self.template.shape != image.shape:
+                continue
+
+            # calculate the similarity
+            mse = self._calculate_mse(self.template, image)
+            p_zx = self._calculate_similarity(mse)
+
+            # update the weights
+            self.weights[i] += p_zx
+            # keep track of normalization
+            normalization += self.weights[i]
+
+            # add noise
+            # TODO: should we mod by shape?
+            self.particles[i] += self._get_noise()
+
+        if normalization > 0:
+            self.weights /= normalization
+            self.weights /= np.sum(self.weights)
 
     def render(self, frame_in):
         """Visualizes current particle filter state.
@@ -128,8 +204,27 @@ class ParticleFilter(object):
             u_weighted_mean += self.particles[i, 0] * self.weights[i]
             v_weighted_mean += self.particles[i, 1] * self.weights[i]
 
+            # draw colored dot point on the image
+            v, u = self.particles[i]
+            # frame_in[v, u] = [0, 255, 0]
+            cv2.circle(frame_in, (int(u), int(v)), 1, (0, 255, 0))
+
         # Complete the rest of the code as instructed.
-        pass
+
+        # based on the docstring, the center is simply the weighted mean of the (u, v)
+        cy, cx = (u_weighted_mean, v_weighted_mean)
+        # get the box size
+        x, y, w, h = self._get_box((cy, cx), self.template)
+        # draw the rectangle
+        cv2.rectangle(frame_in, (x, y), (x + w, y + h), (255, 0, 0))
+
+        # get euclidean distance of every particle to the weighted mean
+        dist = self.particles - [u_weighted_mean, v_weighted_mean]
+        dist = np.sqrt(np.sum(dist**2, axis=1))
+        # calculate the average radius
+        radius = np.sum(dist) / self.num_particles
+        # draw the circle
+        cv2.circle(frame_in, (int(cx), int(cy)), int(radius), (0, 0, 255))
 
 
 class AppearanceModelPF(ParticleFilter):
@@ -164,7 +259,45 @@ class AppearanceModelPF(ParticleFilter):
         Returns:
             None.
         """
-        pass
+        # sample from weighted distribution
+        self._sample()
+
+        best = np.array([])
+        high_similarity = 0.
+        normalization = 0.
+        # for each particle
+        for i, point in enumerate(self.particles):
+            x, y, w, h = self._get_box(point, self.template)
+            image = frame[y:y+h, x:x+w]
+
+            # TODO: should we pad the box?
+            if self.template.shape != image.shape:
+                continue
+
+            # calculate the similarity
+            mse = self._calculate_mse(self.template, image)
+            p_zx = self._calculate_similarity(mse)
+
+            # get the best image with higher similarity
+            if p_zx > high_similarity:
+                best = image
+                high_similarity = p_zx
+
+            # update the weights
+            self.weights[i] += p_zx
+            # keep track of normalization
+            normalization += self.weights[i]
+
+            # add noise
+            # TODO: should we mod by shape?
+            self.particles[i] += self._get_noise()
+
+        # update the template
+        self.template = self.alpha * best + (1 - self.alpha) * self.template
+
+        if normalization > 0:
+            self.weights /= normalization
+            self.weights /= np.sum(self.weights)
 
 
 class MeanShiftLitePF(ParticleFilter):
@@ -197,7 +330,49 @@ class MeanShiftLitePF(ParticleFilter):
         Returns:
             None.
         """
-        pass
+        # sample from weighted distribution
+        self._sample()
+
+        normalization = 0.
+        # for each particle
+        for i, point in enumerate(self.particles):
+            x, y, w, h = self._get_box(point, self.template)
+            image = frame[y:y+h, x:x+w]
+
+            # TODO: should we pad the box?
+            if self.template.shape != image.shape:
+                continue
+
+            histogram_image = cv2.calcHist([image], [0, 1, 2], None, [self.num_bins] * 3, [0, 256, 0, 256, 0, 256])
+            histogram_template = cv2.calcHist([self.template], [0, 1, 2], None, [self.num_bins] * 3, [0, 256, 0, 256, 0, 256])
+
+            histogram_image = histogram_image.flatten()
+            histogram_template = histogram_template.flatten()
+
+            # normalize histograms
+            histogram_image /= np.sum(histogram_image)
+            histogram_template /= np.sum(histogram_template)
+
+            n = np.square(histogram_image - histogram_template)
+            d = histogram_image + histogram_template
+            # calculate chi_squared, the sum is computed for bins that is non zero
+            temp = np.divide(n, d)
+            chi_squared = np.sum(temp[np.where(np.invert(np.isnan(temp)))]) / 2.
+
+            p_zx = self._calculate_similarity(chi_squared)
+
+            # update the weights
+            self.weights[i] += p_zx
+            # keep track of normalization
+            normalization += self.weights[i]
+
+            # add noise
+            # TODO: should we mod by shape?
+            self.particles[i] += self._get_noise()
+
+        if normalization > 0:
+            self.weights /= normalization
+            self.weights /= np.sum(self.weights)
 
 
 class MDParticleFilter(ParticleFilter):
@@ -230,4 +405,47 @@ class MDParticleFilter(ParticleFilter):
         Returns:
             None.
         """
-        pass
+        # sample from weighted distribution
+        self._sample()
+
+        normalization = 0.
+        template_list = []
+        scale_list = []
+        similarity_list = []
+        # for each particle
+        for i, point in enumerate(self.particles):
+            scale = np.random.random_integers(80, 100) / 100.
+            template = self.template.copy()
+            template = cv2.resize(template, (0, 0), fx=scale, fy=scale)
+            template_list.append(template)
+            scale_list.append(scale)
+
+            x, y, w, h = self._get_box(point, template)
+            image = frame[y:y+h, x:x+w]
+
+            # TODO: should we pad the box?
+            if template.shape != image.shape:
+                # print 'ne', template.shape, image.shape
+                continue
+
+            # calculate the similarity
+            mse = self._calculate_mse(template, image)
+            p_zx = self._calculate_similarity(mse)
+            similarity_list.append(p_zx)
+
+            # update the weights
+            self.weights[i] += p_zx
+            # keep track of normalization
+            normalization += self.weights[i]
+
+            # add noise
+            # TODO: should we mod by shape?
+            self.particles[i] += self._get_noise()
+
+        idx = np.argmax(similarity_list)
+        if scale_list[idx] > .95:
+            self.template = template_list[idx]
+
+        if normalization > 0:
+            self.weights /= normalization
+            self.weights /= np.sum(self.weights)
