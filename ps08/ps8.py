@@ -30,6 +30,9 @@ class MotionHistoryBuilder(object):
         #
         # The way to do it is:
         # self.some_parameter_name = kwargs.get('parameter_name', default_value)
+        self.gaussian_kernel = kwargs.get('gaussian_kernel', (15, 15))
+        self.gaussian_sigma_x = kwargs.get('gaussian_sigma_x', 11)
+        self.prev_frame = None
 
     def get_b_t(self, frame, prev_frame):
         """Calculates the binary image B_t.
@@ -49,8 +52,13 @@ class MotionHistoryBuilder(object):
             numpy.array: binary image containing 0s or 1s.
 
         """
-
-        pass
+        frame_diff = np.abs(frame.astype(np.float) - prev_frame.astype(np.float))
+        # B_t(x, y) = 1 if frame - prev_frame >= theta, 0 otherwise
+        # since we want to threshold greater or equal (>=), we subtract theta with 1e-5
+        _, motion_image = cv2.threshold(frame_diff.astype(np.float32), self.theta - 1e-5, 1., cv2.THRESH_BINARY)
+        # without using grayscale, we need to average the motion to convert from 3d to 2d
+        # _, motion_image = cv2.threshold(np.mean(motion_image, axis=2).astype(np.float32), 0, 1., cv2.THRESH_BINARY)
+        return motion_image
 
     def process(self, frame):
         """Processes a frame of video returning a binary image indicating motion areas.
@@ -83,8 +91,29 @@ class MotionHistoryBuilder(object):
             (numpy.array): binary image final B_t (type: bool or uint8), values: 0 (static) or 1 (moving).
 
         """
+        # TODO: pass kernel size from kwargs
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        blurred_frame = cv2.GaussianBlur(gray_frame, self.gaussian_kernel, self.gaussian_sigma_x)
 
-        pass
+        # if the first frame, return zeros motion_image
+        if self.prev_frame is None:
+            # update the prev_frame
+            self.prev_frame = blurred_frame.copy()
+            return np.zeros(frame.shape[:2], dtype=np.float)
+
+        motion_image = self.get_b_t(blurred_frame, self.prev_frame)
+
+        # update the prev frame
+        self.prev_frame = blurred_frame.copy()
+
+        # update the MHI
+        self.mhi -= 1
+        # if not moving, range between 0 and I(x,y,t) - 1
+        _, self.mhi = cv2.threshold(self.mhi.astype(np.float32), 0., np.max(self.mhi), cv2.THRESH_TOZERO)
+        # if moving
+        self.mhi[np.where(motion_image >= 1.)[:2]] = self.tau
+
+        return motion_image
 
     def get_mhi(self):
         """Returns the motion history image computed so far.
@@ -97,7 +126,7 @@ class MotionHistoryBuilder(object):
         """
 
         # Note: This method may not be called for every frame (typically, only once)
-        return self.mhi
+        return cv2.normalize(self.mhi, 0., 1., norm_type=cv2.NORM_MINMAX)
 
 
 class Moments(object):
@@ -120,6 +149,24 @@ class Moments(object):
 
         # Compute all desired moments here (recommended)
         # Note: Make sure computed moments are in correct order
+        x, y = np.meshgrid(range(0, image.shape[1]), range(0, image.shape[0]))
+        M10 = np.sum(np.power(x, 1) * np.power(y, 0) * image)
+        M01 = np.sum(np.power(x, 0) * np.power(y, 1) * image)
+        M00 = np.sum(np.power(x, 0) * np.power(y, 0) * image)
+        x_bar = np.float(M10) / M00
+        y_bar = np.float(M01) / M00
+        x_minus_x_bar = x - x_bar
+        y_minus_y_bar = y - y_bar
+
+        mu00 = np.sum(np.power(x_minus_x_bar, 0) * np.power(y_minus_y_bar, 0) * image)
+
+        pq = [(2, 0), (1, 1), (0, 2), (3, 0), (2, 1), (1, 2), (0, 3), (2, 2)]
+
+        for i, (p, q) in enumerate(pq):
+            self.central_moments[0, i] = np.sum(np.power(x_minus_x_bar, p) * np.power(y_minus_y_bar, q) * image)
+
+        for i, (p, q) in enumerate(pq):
+            self.scaled_moments[0, i] = np.float(self.central_moments[0, i]) / np.power(mu00, 1 + ((p + q) / 2.))
 
     def get_central_moments(self):
         """Returns the central moments as NumPy array.
@@ -173,4 +220,5 @@ def compute_feature_difference(a_features, b_features, scale=0.5):
     """
 
     # Tip: Scale/weight difference values to get better results as moment magnitudes differ
-    pass
+    diff = np.sqrt(np.sum(np.square(a_features - b_features)))
+    return diff

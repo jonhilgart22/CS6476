@@ -170,7 +170,7 @@ def match_features(a_features_dict, b_features_dict, n_actions, scale=0.5):
 
 def part_1a():
     filename = "PS8A1P1T1.mp4"  # Video file that represents Action 1, Person 1, Trial 1
-    theta = 0.  # Define a value for theta
+    theta = 10.  # Define a value for theta
     build_motion_history_image(MotionHistoryBuilder,  # motion history builder class
                                os.path.join(input_dir, filename),  # input video
                                save_frames={
@@ -185,12 +185,12 @@ def part_1a():
 def part_1b_1():
     filename = "PS8A1P1T1.mp4"  # Use Action 1. You may choose a different Person and Trial.
     mhi_frame = 90  # Pick a good frame to obtain MHI at, i.e. when action just ends
-    theta = 0.  # Define a value for theta
-    tau = 0.  # Define a value for theta
+    theta = 10.  # Define a value for theta
+    tau = 30.  # Define a value for theta
     build_motion_history_image(MotionHistoryBuilder,  # motion history builder class
                                os.path.join(input_dir, filename),
-                               mhi_frame=mhi_frame,
-                               mhi_filename=os.path.join(output_dir, 'ps8-1-b-1.png'),
+                               # mhi_frame=mhi_frame,
+                               # mhi_filename=os.path.join(output_dir, 'ps8-1-b-1.png'),
                                theta=theta,
                                tau=tau
                                )  # Specify any other keyword args that your motion history builder
@@ -207,9 +207,31 @@ def part_1b_2():
     Returns:
         None
     """
+    filename = "PS8A2P1T1.mp4"  # Use Action 1. You may choose a different Person and Trial.
+    mhi_frame = 90  # Pick a good frame to obtain MHI at, i.e. when action just ends
+    theta = 10.  # Define a value for theta
+    tau = 30.  # Define a value for theta
+    build_motion_history_image(MotionHistoryBuilder,  # motion history builder class
+                               os.path.join(input_dir, filename),
+                               mhi_frame=mhi_frame,
+                               mhi_filename=os.path.join(output_dir, 'ps8-1-b-2.png'),
+                               theta=theta,
+                               tau=tau
+                               )  # Specify any other keyword args that your motion history builder
+                                  # expects, e.g. theta, tau
 
-    # TODO: Your code here
-    pass
+    filename = "PS8A3P1T1.mp4"  # Use Action 1. You may choose a different Person and Trial.
+    mhi_frame = 90  # Pick a good frame to obtain MHI at, i.e. when action just ends
+    theta = 10.  # Define a value for theta
+    tau = 30.  # Define a value for theta
+    build_motion_history_image(MotionHistoryBuilder,  # motion history builder class
+                               os.path.join(input_dir, filename),
+                               mhi_frame=mhi_frame,
+                               mhi_filename=os.path.join(output_dir, 'ps8-1-b-3.png'),
+                               theta=theta,
+                               tau=tau
+                               )  # Specify any other keyword args that your motion history builder
+                                  # expects, e.g. theta, tau
 
 
 def part_2a():
@@ -224,10 +246,39 @@ def part_2a():
     # Note: To specify custom parameters for a video, add to the dict below:
     #   (<action>, <participant>, <trial>): dict(<param1>=<value1>, <param2>=<value2>, ...)
     custom_params = {
-        (1, 1, 3): dict(mhi_frame=90),  # PS8A1P1T3.mp4 Reference value you may use a different one
-        (1, 2, 3): dict(mhi_frame=55)  # PS8A1P2T3.mp4 Reference value you may use a different one
+        # (1, 1, 3): dict(mhi_frame=90),  # PS8A1P1T3.mp4 Reference value you may use a different one
+        # (1, 2, 3): dict(mhi_frame=55)  # PS8A1P2T3.mp4 Reference value you may use a different one
         # You can add more if needed up to one for each video following the format:
         # (1, 3, 4): dict(mhi_frame=value1, theta=value2, tau=value3)
+        (1, 1, 1): dict(mhi_frame=109, theta=10, tau=35),
+        (1, 1, 2): dict(mhi_frame=95, theta=10, tau=35),
+        (1, 1, 3): dict(mhi_frame=111, theta=10, tau=35),
+        (1, 2, 1): dict(mhi_frame=72, theta=10, tau=25),
+        (1, 2, 2): dict(mhi_frame=64, theta=10, tau=20),
+        (1, 2, 3): dict(mhi_frame=68, theta=10, tau=20),
+        (1, 3, 1): dict(mhi_frame=84, theta=25, tau=25),
+        (1, 3, 2): dict(mhi_frame=80, theta=25, tau=25),
+        (1, 3, 3): dict(mhi_frame=77, theta=25, tau=25),
+
+        (2, 1, 1): dict(mhi_frame=55, theta=10, tau=45),
+        (2, 1, 2): dict(mhi_frame=55, theta=10, tau=45),
+        (2, 1, 3): dict(mhi_frame=65, theta=10, tau=55),
+        (2, 2, 1): dict(mhi_frame=50, theta=10, tau=50),
+        (2, 2, 2): dict(mhi_frame=50, theta=10, tau=50),
+        (2, 2, 3): dict(mhi_frame=50, theta=10, tau=50),
+        (2, 3, 1): dict(mhi_frame=50, theta=10, tau=45),
+        (2, 3, 2): dict(mhi_frame=50, theta=10, tau=45),
+        (2, 3, 3): dict(mhi_frame=50, theta=10, tau=45),
+
+        (3, 1, 1): dict(mhi_frame=97, theta=10, tau=45),
+        (3, 1, 2): dict(mhi_frame=90, theta=10, tau=45),
+        (3, 1, 3): dict(mhi_frame=92, theta=10, tau=45),
+        (3, 2, 1): dict(mhi_frame=74, theta=10, tau=45),
+        (3, 2, 2): dict(mhi_frame=80, theta=10, tau=45),
+        (3, 2, 3): dict(mhi_frame=79, theta=10, tau=45),
+        (3, 3, 1): dict(mhi_frame=75, theta=20, tau=60),
+        (3, 3, 2): dict(mhi_frame=90, theta=20, tau=60),
+        (3, 3, 3): dict(mhi_frame=85, theta=20, tau=60),
     }
 
     n_actions = 3
@@ -267,7 +318,30 @@ def part_2b():
     print(confusion_p1)
 
     # TODO: Similarly for participants P2 & P3
+    person = 2
+    n_actions = 3
+    scale = 0.5  # Select a different scale factor (if needed) to help obtain an identity confusion matrix
+    features = central_moment_features  # Pick one between central_moment_features and scaled_moment_features
+    features_p2 = {key: feature for key, feature in features.items() if key[1] == person}
+    features_sans_p2 = {key: feature for key, feature in features.items() if key[1] != person}
+    confusion_p2 = match_features(features_p2, features_sans_p2, n_actions, scale)
+    print("Confusion matrix for P{}:-".format(person))
+    print(confusion_p2)
+
+    person = 3
+    n_actions = 3
+    scale = 0.5  # Select a different scale factor (if needed) to help obtain an identity confusion matrix
+    features = central_moment_features  # Pick one between central_moment_features and scaled_moment_features
+    features_p3 = {key: feature for key, feature in features.items() if key[1] == person}
+    features_sans_p3 = {key: feature for key, feature in features.items() if key[1] != person}
+    confusion_p3 = match_features(features_p3, features_sans_p3, n_actions, scale)
+    print("Confusion matrix for P{}:-".format(person))
+    print(confusion_p3)
+
     # TODO: Finally find the Average confusion matrix of P1, P2, and P3
+    average_confusion = (confusion_p1 + confusion_p2 + confusion_p3) / 3
+    print('Average confusion matrix')
+    print(average_confusion)
 
 if __name__ == "__main__":
     part_1a()
